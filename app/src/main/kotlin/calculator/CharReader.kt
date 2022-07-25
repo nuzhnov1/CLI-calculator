@@ -1,33 +1,43 @@
 package calculator
 
+import java.io.Closeable
 import java.io.LineNumberReader
 import java.io.PushbackReader
 import java.io.Reader
 
-const val EOF = '\u0000'
+class CharStream(reader: Reader, private val tabSize: Int = 4): Closeable {
+    private val lineNumberReader = LineNumberReader(reader)
+    private val pushbackReader = PushbackReader(lineNumberReader, PUSHBACK_BUFFER_SIZE)
 
-class CharStream(reader: Reader, bufferSize: Int): LineNumberReader(reader) {
-    private val pushbackReader = PushbackReader(this, bufferSize)
-    var charNumber = 0
+    var lineNumber
+        get() = lineNumberReader.lineNumber
+        set(value) { lineNumberReader.lineNumber = value }
+    var position = 1
 
 
-    init { lineNumber = 1 }
-
-
-    override fun read(): Int {
-        synchronized(lock) {
-            val code = pushbackReader.read()
-
-            if (code >= 0) {
-                charNumber++
-            }
-
-            return if (code < 0) { 0 } else { code }
+    init {
+        if (tabSize < 1) {
+            throw IllegalArgumentException("tabSize < 1")
         }
+
+        lineNumber = 1
     }
 
-    fun readChar() = read().toChar()
 
-    fun unread(code: Int) = pushbackReader.unread(code)
+    fun readChar(): Char {
+        val code = pushbackReader.read()
+        val char = if (code < 0) { EOF } else { code.toChar() }
+
+        when {
+            char == LF -> position = 1
+            char == TAB -> position += (tabSize - (position - 1) % tabSize)
+            char != EOF -> position++
+        }
+
+        return char
+    }
+
     fun unread(char: Char) = pushbackReader.unread(char.code)
+
+    override fun close() = pushbackReader.close()
 }
