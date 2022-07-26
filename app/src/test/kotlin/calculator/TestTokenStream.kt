@@ -59,7 +59,7 @@ class TestTokenStream {
         testSingleToken("\n", Token(TokenType.EOL, "\n"))
         testSingleToken("$CR", Token(TokenType.EOL, "\n"))
         testSingleToken("*", Token(TokenType.OP, "*"))
-        testSingleToken(",", Token(TokenType.COLON, ","))
+        testSingleToken(",", Token(TokenType.COMMA, ","))
         testSingleToken("=", Token(TokenType.ASSIGN, "="))
         testSingleToken("(", Token(TokenType.PARENTHESES, "("))
 

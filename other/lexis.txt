@@ -7,10 +7,10 @@ int:           | \d+                    | Integer numbers                       
 float:         | (\.\d+)|(\d+\.\d*)     | Float numbers                                | 3       |
 ident:         | [_a-zA-Z]\w*           | Identifiers, e.g. variable or function names | 4       |
 op:            | [\-\+\*\/\^\!\%]       | Operation signs                              | 5       |
-colon:         | \,                     | Colon                                        | 6       |
+comma:         | \,                     | Comma                                        | 6       |
 assign:        | =                      | Assign operation                             | 7       |
 spaces:        | [ \f\r\t\v]+           | Space characters                             | 8       |
-parent:        | [\(\)]                 | Parentheses                                  | 9       |
+parentheses:   | [\(\)]                 | Parentheses                                  | 9       |
 command:       | \/[_a-zA-Z]\w*         | Commands                                     | 10      |
 --------------------------------------------------------------------------------------------------
 

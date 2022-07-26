@@ -25,7 +25,7 @@ class TokenStream(charStream: CharStream): Closeable, Iterator<Token> {
             '_', in 'a'..'z', in 'A'..'Z' -> state4(char.toStringBuilder())
             '+', '-', '*', '^', '!', '%' -> Token(TokenType.OP, char.toString())
             '/' -> state5(char.toStringBuilder())
-            ',' -> Token(TokenType.COLON, ",")
+            ',' -> Token(TokenType.COMMA, ",")
             '=' -> Token(TokenType.ASSIGN, "=")
             TAB, VT, FF, SPACE -> state7(char.toStringBuilder())
             '(', ')' -> Token(TokenType.PARENTHESES, char.toString())
