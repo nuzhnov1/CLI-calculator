@@ -1,17 +1,4 @@
 -------------------------------------------------------------------------------------------------
-Abstract syntax:                                                                                |
--------------------------------------------------------------------------------------------------
-Statement: lvalue assign expr                                                                   |
-Statement: (command | expr) EOL                                                                 |
-Expr: unOpLeft? term UnOpRight? (binOp expr)?                                                   |
-Term: rvalue | lvalue | ("(" expr ")") | functionCall                                           |
-FunctionCall: ident "(" (expr ("," expr)* )? ")"                                                |
-UnOpLeft: "+" | "-"                                                                             |
-UnOpRight: "!" | "%"                                                                            |
-BinOp: "+" | "-" | "*" | "/" | "^"                                                              |
-Rvalue: int | float                                                                             |
-Lvalue: ident                                                                                   |
--------------------------------------------------------------------------------------------------
 Priority of operators:                                                                          |
 1: Function call.                                                                               |
 2: Factorial operation ("!") and percent operation ("%"). Left-association.                     |
@@ -29,11 +16,10 @@ Statement ::= ident assign #TokenToPostfix Expr #AssignToPostfix ENDLINE        
                                                                                                 |
 ENDLINE ::= EOF | EOL                                                                           |
                                                                                                 |
-Expr ::= ExprPriority6                                                                          |
-ExprPriority6 ::= ExprPriority5 ExprPriority6Rest                                               |
-ExprPriority6Rest ::= "+" ExprPriority5 #PlusToPostfix ExprPriority6Rest                        |
-                  |   "-" ExprPriority5 #MinusToPostfix ExprPriority6Rest                       |
-                  |   epsilon                                                                   |
+Expr ::= ExprPriority5 ExprRest                                                                 |
+ExprRest ::= "+" ExprPriority5 #PlusToPostfix ExprRest                                          |
+         |   "-" ExprPriority5 #MinusToPostfix ExprRest                                         |
+         |   epsilon                                                                            |
 ExprPriority5 ::= ExprPriority4 ExprPriority5Rest                                               |
 ExprPriority5Rest ::= "*" ExprPriority4 #MulToPostfix ExprPriority5Rest                         |
                   |   "/" ExprPriority4 #DivToPostfix ExprPriority5Rest                         |
@@ -42,7 +28,7 @@ ExprPriority4 ::= "+" ExprPriority4 #PlusToPostfix                              
               |   "-" ExprPriority4 #MinusToPostfix                                             |
               |   ExprPriority3                                                                 |
 ExprPriority3 ::= ExprPriority2 ExprPriority3Rest                                               |
-ExprPriority3Rest ::= "^" ExprPriority3 #PowToPostfix ExprPriority3Rest                         |
+ExprPriority3Rest ::= "^" ExprPriority4 #PowToPostfix ExprPriority3Rest                         |
                   |   epsilon                                                                   |
 ExprPriority2 ::= ExprPriority1 ExprPriority2Rest                                               |
 ExprPriority2Rest ::= "!" #FactorialToPostfix ExprPriority2Rest                                 |
@@ -57,7 +43,7 @@ FunctionCallOrEpsilon ::= "(" ActualArgumentsList ")" #InvokeToPostfix          
                       |   epsilon                                                               |
 ActualArgumentsList ::= Expr #PutArgToPostfix ActualArgumentsListRest                           |
 ActualArgumentsListRest ::= "," Expr #PutArgToPostfix ActualArgumentsListRest                   |
-                        |   Expr #PutArgToPostfix                                               |
+                        |   epsilon                                                             |
 ------------------------------------------------------------------------------------------------|
 Parser actions:                                                                                 |
 ------------------------------------------------------------------------------------------------|
