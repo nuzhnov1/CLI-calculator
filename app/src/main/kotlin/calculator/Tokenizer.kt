@@ -1,14 +1,16 @@
 package calculator
 
 import java.io.Closeable
+import java.io.Reader
 
-class Tokenizer(private val charStream: CharStream) : Closeable, Iterator<Token> {
+internal class Tokenizer(reader: Reader) : Closeable, Iterator<Token> {
+    private val charStream = CharStream(reader)
     private val tokenStack = ArrayDeque<Token>(1)
 
 
     override fun next(): Token {
         if (!tokenStack.isEmpty()) {
-            return tokenStack.removeLast()
+            return tokenStack.removeFirst()
         }
 
         return when (val char = charStream.read()) {
@@ -24,25 +26,21 @@ class Tokenizer(private val charStream: CharStream) : Closeable, Iterator<Token>
             TAB, VT, FF, SPACE -> state7(char.toStringBuilder())
             '(' -> Token(TokenKind.PARENTHESES, char.toString())
             ')' -> state8(char.toStringBuilder())
-            else -> errorReport("illegal character '$char'")
+            else -> throw SyntaxException("illegal character '$char'")
         }
     }
-
-    fun pushBack(token: Token) = tokenStack.addLast(token)
 
     override fun hasNext(): Boolean {
         val token = next()
 
-        tokenStack.addLast(token)
+        tokenStack.addFirst(token)
         return token.tokenKind != TokenKind.EOF
     }
 
+    fun pushBack(token: Token) = tokenStack.addFirst(token)
+
     override fun close() = charStream.close()
 
-
-    private fun errorReport(message: String): Nothing {
-        throw SyntaxException("Syntax error: $message")
-    }
 
     private tailrec fun state1(curLexem: StringBuilder): Token =
         when (val char = charStream.read()) {
@@ -62,13 +60,13 @@ class Tokenizer(private val charStream: CharStream) : Closeable, Iterator<Token>
                 Token(TokenKind.INT, curLexem.toString())
             }
 
-            else -> errorReport("illegal character '$char'")
+            else -> throw SyntaxException("illegal character '$char'")
         }
 
     private fun state2(curLexem: StringBuilder) =
         when (val char = charStream.read()) {
             in '0'..'9' -> state3(curLexem.append(char))
-            else -> errorReport("illegal character '.'")
+            else -> throw SyntaxException("illegal character '.'")
         }
 
     private tailrec fun state3(curLexem: StringBuilder): Token =
@@ -88,7 +86,7 @@ class Tokenizer(private val charStream: CharStream) : Closeable, Iterator<Token>
                 Token(TokenKind.FLOAT, curLexem.toString())
             }
 
-            else -> errorReport("illegal character '$char'")
+            else -> throw SyntaxException("illegal character '$char'")
         }
 
     private tailrec fun state4(curLexem: StringBuilder): Token =
@@ -104,7 +102,7 @@ class Tokenizer(private val charStream: CharStream) : Closeable, Iterator<Token>
                 Token(TokenKind.IDENT, curLexem.toString())
             }
 
-            else -> errorReport("illegal character '$char'")
+            else -> throw SyntaxException("illegal character '$char'")
         }
 
     private fun state5(curLexem: StringBuilder) =
@@ -118,7 +116,7 @@ class Tokenizer(private val charStream: CharStream) : Closeable, Iterator<Token>
                 Token(TokenKind.OP, "/")
             }
 
-            else -> errorReport("illegal character '$char'")
+            else -> throw SyntaxException("illegal character '$char'")
         }
 
     private tailrec fun state6(curLexem: StringBuilder): Token =
@@ -134,7 +132,7 @@ class Tokenizer(private val charStream: CharStream) : Closeable, Iterator<Token>
                 Token(TokenKind.COMMAND, curLexem.toString())
             }
 
-            else -> errorReport("illegal character '$char'")
+            else -> throw SyntaxException("illegal character '$char'")
         }
 
     private tailrec fun state7(curLexem: StringBuilder): Token =
@@ -148,7 +146,7 @@ class Tokenizer(private val charStream: CharStream) : Closeable, Iterator<Token>
                 Token(TokenKind.SPACES, curLexem.toString())
             }
 
-            else -> errorReport("illegal character '$char'")
+            else -> throw SyntaxException("illegal character '$char'")
         }
 
     private fun state8(curLexem: StringBuilder): Token =
@@ -168,6 +166,6 @@ class Tokenizer(private val charStream: CharStream) : Closeable, Iterator<Token>
                 Token(TokenKind.PARENTHESES, curLexem.toString())
             }
 
-            else -> errorReport("illegal character '$char'")
+            else -> throw SyntaxException("illegal character '$char'")
         }
 }

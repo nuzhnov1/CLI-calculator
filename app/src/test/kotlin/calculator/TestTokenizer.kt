@@ -8,51 +8,7 @@ import org.junit.jupiter.api.assertThrows
 import java.io.StringReader
 
 @DisplayName("Testing methods of the Tokenizer class")
-class TestTokenizer {
-    private fun testReadSingleToken(inputString: String, expectedToken: Token) {
-        val tokenStream = Tokenizer(CharStream(StringReader(inputString)))
-        val token = tokenStream.next()
-
-        tokenStream.use {
-            assertEquals(expectedToken, token, "The actual token is not equal to the expected one")
-        }
-    }
-
-    private fun testReadMultipleTokens(inputString: String, expectedTokens: List<Token>) {
-        val tokenStream = Tokenizer(CharStream(StringReader(inputString)))
-        val tokens = mutableListOf<Token>()
-
-        tokenStream.forEach { token -> tokens.add(token) }
-
-        tokenStream.use {
-            assertEquals(
-                expectedTokens.count(), tokens.count(),
-                "The actual count of tokens is not equal to the expected one"
-            )
-
-            expectedTokens.zip(tokens).forEach {
-                assertEquals(
-                    it.first, it.second,
-                    "The actual token is not equal to the expected one"
-                )
-            }
-        }
-    }
-
-    private fun testReadInvalidTokens(inputString: String, expectedMessage: String) {
-        val tokenStream = Tokenizer(CharStream(StringReader(inputString)))
-
-        tokenStream.use {
-            val exception = assertThrows<SyntaxException> { tokenStream.forEach { _ -> } }
-
-            assertEquals(
-                expectedMessage, exception.message,
-                "The actual exception message is not equal to the expected one"
-            )
-        }
-    }
-
-
+internal class TestTokenizer {
     @Test
     @DisplayName(
         """
@@ -68,7 +24,7 @@ class TestTokenizer {
         testReadSingleToken("=", Token(TokenKind.ASSIGN, "="))
         testReadSingleToken("(", Token(TokenKind.PARENTHESES, "("))
 
-        testReadInvalidTokens("\n\n@", "Syntax error: illegal character '@'")
+        testReadInvalidTokens("\n\n@", "illegal character '@'")
     }
 
     @Test
@@ -90,7 +46,7 @@ class TestTokenizer {
             Token(TokenKind.IDENT, "a")
         ))
 
-        testReadInvalidTokens("123@", "Syntax error: illegal character '@'")
+        testReadInvalidTokens("123@", "illegal character '@'")
     }
 
     @Test
@@ -100,7 +56,7 @@ class TestTokenizer {
         """
     )
     fun testState2() {
-        testReadInvalidTokens(".@", "Syntax error: illegal character '.'")
+        testReadInvalidTokens(".@", "illegal character '.'")
     }
 
     @Test
@@ -123,7 +79,7 @@ class TestTokenizer {
             Token(TokenKind.IDENT, "e")
         ))
 
-        testReadInvalidTokens("1.@", "Syntax error: illegal character '@'")
+        testReadInvalidTokens("1.@", "illegal character '@'")
     }
 
     @Test
@@ -147,7 +103,7 @@ class TestTokenizer {
             Token(TokenKind.SPACES, " \t\t\t \t\t \t"),
         ))
 
-        testReadInvalidTokens("e1.", "Syntax error: illegal character '.'")
+        testReadInvalidTokens("e1.", "illegal character '.'")
     }
 
     @Test
@@ -168,7 +124,7 @@ class TestTokenizer {
             Token(TokenKind.SPACES, " \t"),
         ))
 
-        testReadInvalidTokens("/.", "Syntax error: illegal character '.'")
+        testReadInvalidTokens("/.", "illegal character '.'")
     }
 
     @Test
@@ -188,7 +144,7 @@ class TestTokenizer {
             Token(TokenKind.OP, "+"),
         ))
 
-        testReadInvalidTokens("/exit#", "Syntax error: illegal character '#'")
+        testReadInvalidTokens("/exit#", "illegal character '#'")
     }
 
     @Test
@@ -206,7 +162,7 @@ class TestTokenizer {
             Token(TokenKind.OP, "/"),
         ))
 
-        testReadInvalidTokens("   $", "Syntax error: illegal character '$'")
+        testReadInvalidTokens("   $", "illegal character '$'")
     }
 
     @Test
@@ -247,7 +203,7 @@ class TestTokenizer {
             Token(TokenKind.IDENT, "e")
         ))
 
-        testReadInvalidTokens(").", "Syntax error: illegal character '.'")
+        testReadInvalidTokens(").", "illegal character '.'")
     }
 
 
@@ -348,7 +304,6 @@ class TestTokenizer {
         ))
     }
 
-
     @Test
     @Disabled
     @DisplayName(
@@ -359,5 +314,52 @@ class TestTokenizer {
     fun testLongIdentifier() {
         val longIdentifier = "a".repeat(10000)
         testReadSingleToken(longIdentifier, Token(TokenKind.IDENT, longIdentifier))
+    }
+
+
+    private fun testReadSingleToken(inputString: String, expectedToken: Token) {
+        val tokenStream = Tokenizer(StringReader(inputString))
+        val token = tokenStream.next()
+
+        tokenStream.use {
+            assertEquals(
+                expectedToken, token,
+                "The actual token is not equal to the expected one"
+            )
+        }
+    }
+
+    private fun testReadMultipleTokens(inputString: String, expectedTokens: List<Token>) {
+        val tokenStream = Tokenizer(StringReader(inputString))
+        val tokens = mutableListOf<Token>()
+
+        tokenStream.forEach { token -> tokens.add(token) }
+
+        tokenStream.use {
+            assertEquals(
+                expectedTokens.count(), tokens.count(),
+                "The actual count of tokens is not equal to the expected one"
+            )
+
+            expectedTokens.zip(tokens).forEach {
+                assertEquals(
+                    it.first, it.second,
+                    "The actual token is not equal to the expected one"
+                )
+            }
+        }
+    }
+
+    private fun testReadInvalidTokens(inputString: String, expectedMessage: String) {
+        val tokenStream = Tokenizer(StringReader(inputString))
+
+        tokenStream.use {
+            val exception = assertThrows<SyntaxException> { tokenStream.forEach { _ -> } }
+
+            assertEquals(
+                expectedMessage, exception.message,
+                "The actual exception message is not equal to the expected one"
+            )
+        }
     }
 }

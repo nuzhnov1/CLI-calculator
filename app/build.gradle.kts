@@ -5,7 +5,7 @@ project.description = """
 
 project.group = "com.sunman24"
 project.status = "in development"
-project.version = "0.1"
+project.version = "0.3"
 
 
 plugins {

@@ -5,7 +5,7 @@ import java.io.LineNumberReader
 import java.io.PushbackReader
 import java.io.Reader
 
-class CharStream(reader: Reader) : Closeable {
+internal class CharStream(reader: Reader) : Closeable {
     private val pushbackReader = PushbackReader(LineNumberReader(reader), PUSHBACK_BUFFER_SIZE)
 
 
