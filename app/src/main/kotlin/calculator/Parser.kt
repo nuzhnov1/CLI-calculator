@@ -1,13 +1,15 @@
 package calculator
 
-class Parser {
+import java.io.Reader
+
+internal class Parser {
     private lateinit var tokenizer: Tokenizer
     private lateinit var postfixRecord: MutableList<Token>
     private lateinit var curToken: Token
 
 
-    fun parse(charStream: CharStream): List<Token> {
-        tokenizer = Tokenizer(charStream)
+    fun parse(reader: Reader): List<Token> {
+        tokenizer = Tokenizer(reader)
         postfixRecord = mutableListOf()
         curToken = readToken()
 
@@ -44,10 +46,15 @@ class Parser {
         }
     }
 
-    private fun errorReport(expected: String, actualToken: Token): Nothing {
+    private fun errorReport(expectedInput: String, actualToken: Token): Nothing {
         when (actualToken.tokenKind) {
-            TokenKind.EOF, TokenKind.EOL -> throw SyntaxException("Syntax error: $expected, got end of line")
-            else -> throw SyntaxException("Syntax error: $expected, got '${actualToken.lexem}'")
+            TokenKind.EOF, TokenKind.EOL -> throw SyntaxException(
+                "expected $expectedInput, got end of line"
+            )
+
+            else -> throw SyntaxException(
+                "expected $expectedInput, got '${actualToken.lexem}'"
+            )
         }
     }
 
@@ -81,7 +88,7 @@ class Parser {
                     parseExpr()
                     parseEndLine()
                 } else {
-                    errorReport("expected expression or command", curToken)
+                    errorReport("expression or command", curToken)
                 }
             }
 
@@ -90,7 +97,7 @@ class Parser {
                     parseExpr()
                     parseEndLine()
                 } else {
-                    errorReport("expected expression or command", curToken)
+                    errorReport("expression or command", curToken)
                 }
             }
 
@@ -102,13 +109,13 @@ class Parser {
                 parseEndLine()
             }
 
-            else -> errorReport("expected expression or command", curToken)
+            else -> errorReport("expression or command", curToken)
         }
     }
 
     private fun parseEndLine() {
         if (!(curToken.tokenKind == TokenKind.EOF || curToken.tokenKind == TokenKind.EOL)) {
-            errorReport("expected end of line", curToken)
+            errorReport("end of line", curToken)
         }
     }
 
@@ -217,16 +224,16 @@ class Parser {
                     parseExpr()
 
                     if (curToken.lexem != ")") {
-                        errorReport("expected ')'", curToken)
+                        errorReport("')'", curToken)
                     } else {
                         curToken = readTokenInExpr()
                     }
                 } else {
-                    errorReport("expected expression", curToken)
+                    errorReport("expression", curToken)
                 }
             }
 
-            else -> errorReport("expected expression", curToken)
+            else -> errorReport("expression", curToken)
         }
     }
 
@@ -240,19 +247,19 @@ class Parser {
                 parseActualArgumentsList()
 
                 if (curToken.lexem != ")") {
-                    errorReport("expected ')'", curToken)
+                    errorReport("')'", curToken)
                 } else {
                     readTokenInExpr()
                 }
             }
 
-            postfixRecord.add(Token(TokenKind.INVOKE, "invoke"))
+            postfixRecord.add(Token(TokenKind.ACTION, "invoke"))
         }
     }
 
     private fun parseActualArgumentsList() {
         parseExpr()
-        postfixRecord.add(Token(TokenKind.PUT_ARG, "put_arg"))
+        postfixRecord.add(Token(TokenKind.ACTION, "put_arg"))
         parseActualArgumentsListRest()
     }
 
@@ -261,7 +268,7 @@ class Parser {
             TokenKind.COMMA -> {
                 curToken = readTokenInExpr()
                 parseExpr()
-                postfixRecord.add(Token(TokenKind.PUT_ARG, "put_arg"))
+                postfixRecord.add(Token(TokenKind.ACTION, "put_arg"))
                 parseActualArgumentsListRest()
             }
 

@@ -7,33 +7,7 @@ import org.junit.jupiter.api.assertThrows
 import java.io.StringReader
 
 @DisplayName("Testing methods of the Parser class")
-class TestParser {
-    private fun testParseStatement(inputString: String, expectedPostfixRecord: String) {
-        val parser = Parser()
-        val charStream = CharStream(StringReader(inputString))
-
-        val actualPostfixRecord = parser
-            .parse(charStream)
-            .joinToString(separator = " ") { it.lexem }
-
-        assertEquals(
-            expectedPostfixRecord, actualPostfixRecord,
-            "The actual postfix record is not equal to the expected one"
-        )
-    }
-
-    private fun testParseInvalidStatement(inputString: String, expectedMessage: String) {
-        val parser = Parser()
-        val charStream = CharStream(StringReader(inputString))
-
-        val exception = assertThrows<SyntaxException>(expectedMessage) { parser.parse(charStream) }
-
-        assertEquals(
-            expectedMessage, exception.message,
-            "The actual exception message is not equal to the expected one"
-        )
-    }
-
+internal class TestParser {
     @Test
     @DisplayName(
         """
@@ -48,11 +22,11 @@ class TestParser {
         testParseStatement("e1 = 0", "e1 0 =")
         testParseStatement("a=( b )", "a b =")
 
-        testParseInvalidStatement("a==", "Syntax error: expected expression, got '='")
-        testParseInvalidStatement("a=\n", "Syntax error: expected expression, got end of line")
-        testParseInvalidStatement("a=", "Syntax error: expected expression, got end of line")
-        testParseInvalidStatement("a=*", "Syntax error: expected expression, got '*'")
-        testParseInvalidStatement("a=/help", "Syntax error: expected expression, got '/'")
+        testParseInvalidStatement("a==", "expected expression, got '='")
+        testParseInvalidStatement("a=\n", "expected expression, got end of line")
+        testParseInvalidStatement("a=", "expected expression, got end of line")
+        testParseInvalidStatement("a=*", "expected expression, got '*'")
+        testParseInvalidStatement("a=/help", "expected expression, got '/'")
     }
 
     @Test
@@ -64,9 +38,9 @@ class TestParser {
     fun testParseCommandStatements() {
         testParseStatement(" /help  ", "help")
 
-        testParseInvalidStatement("/go*1", "Syntax error: expected end of line, got '*'")
-        testParseInvalidStatement("/go  1", "Syntax error: expected end of line, got '1'")
-        testParseInvalidStatement("/go,", "Syntax error: expected end of line, got ','")
+        testParseInvalidStatement("/go*1", "expected end of line, got '*'")
+        testParseInvalidStatement("/go  1", "expected end of line, got '1'")
+        testParseInvalidStatement("/go,", "expected end of line, got ','")
     }
 
     @Test
@@ -104,9 +78,9 @@ class TestParser {
         testParseStatement("\t 1.2\t", "1.2")
         testParseStatement("(1)", "1")
 
-        testParseInvalidStatement("*1", "Syntax error: expected expression or command, got '*'")
-        testParseInvalidStatement(")a", "Syntax error: expected expression or command, got ')'")
-        testParseInvalidStatement(",a", "Syntax error: expected expression or command, got ','")
+        testParseInvalidStatement("*1", "expected expression or command, got '*'")
+        testParseInvalidStatement(")a", "expected expression or command, got ')'")
+        testParseInvalidStatement(",a", "expected expression or command, got ','")
     }
 
     @Test
@@ -144,11 +118,11 @@ class TestParser {
             "7 2 ! ! 7 u- ^ u- u+ ^ u- 4 % u- u+ 4 u- u- * var * another_var / -"
         )
 
-        testParseInvalidStatement("-7+", "Syntax error: expected expression, got end of line")
-        testParseInvalidStatement("abc/%", "Syntax error: expected expression, got '%'")
-        testParseInvalidStatement("+/abc", "Syntax error: expected expression, got '/'")
-        testParseInvalidStatement("-7^*2", "Syntax error: expected expression, got '*'")
-        testParseInvalidStatement("!", "Syntax error: expected expression or command, got '!'")
+        testParseInvalidStatement("-7+", "expected expression, got end of line")
+        testParseInvalidStatement("abc/%", "expected expression, got '%'")
+        testParseInvalidStatement("+/abc", "expected expression, got '/'")
+        testParseInvalidStatement("-7^*2", "expected expression, got '*'")
+        testParseInvalidStatement("!", "expected expression or command, got '!'")
 
         testParseStatement("(1 + 2) * 3", "1 2 + 3 *")
         testParseStatement("(1 - 2)e", "1 2 - e *")
@@ -157,9 +131,9 @@ class TestParser {
             "7 u- 2 u+ ! ! ^ 7 u- ^ 4 % u- u+ - 4 u- u- var * another_var / *"
         )
 
-        testParseInvalidStatement("()", "Syntax error: expected expression, got ')'")
-        testParseInvalidStatement("(1", "Syntax error: expected ')', got end of line")
-        testParseInvalidStatement("(1 + 2 * 3", "Syntax error: expected ')', got end of line")
+        testParseInvalidStatement("()", "expected expression, got ')'")
+        testParseInvalidStatement("(1", "expected ')', got end of line")
+        testParseInvalidStatement("(1 + 2 * 3", "expected ')', got end of line")
     }
 
     @Test
@@ -191,7 +165,32 @@ class TestParser {
             "log 2 3 + 1 * put_arg 2 put_arg invoke a * function 1 2 + 2 3 - * put_arg invoke 5 * +"
         )
 
-        testParseInvalidStatement("log(2 + 3", "Syntax error: expected ')', got end of line")
-        testParseInvalidStatement("log(2 + 3, 1", "Syntax error: expected ')', got end of line")
+        testParseInvalidStatement("log(2 + 3", "expected ')', got end of line")
+        testParseInvalidStatement("log(2 + 3, 1", "expected ')', got end of line")
+    }
+
+
+    private fun testParseStatement(inputString: String, expectedPostfixRecord: String) {
+        val parser = Parser()
+
+        val actualPostfixRecord = parser
+            .parse(StringReader(inputString))
+            .joinToString(separator = " ") { it.lexem }
+
+        assertEquals(
+            expectedPostfixRecord, actualPostfixRecord,
+            "The actual postfix record is not equal to the expected one"
+        )
+    }
+
+    private fun testParseInvalidStatement(inputString: String, expectedMessage: String) {
+        val parser = Parser()
+
+        val exception = assertThrows<SyntaxException>(expectedMessage) { parser.parse(StringReader(inputString)) }
+
+        assertEquals(
+            expectedMessage, exception.message,
+            "The actual exception message is not equal to the expected one"
+        )
     }
 }
