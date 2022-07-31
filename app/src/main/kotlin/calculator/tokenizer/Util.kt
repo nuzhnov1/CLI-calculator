@@ -1,4 +1,4 @@
-package calculator
+package calculator.tokenizer
 
 
 internal const val EOF      = '\u0000'  // End of file

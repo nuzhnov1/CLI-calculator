@@ -1,5 +1,6 @@
 package calculator
 
+import calculator.parser.Parser
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -17,7 +18,7 @@ internal class TestParser {
     fun testParseAssignStatements() {
         testParseStatement("a= \t1.0-5\n\n", "a 1.0 5 - =")
         testParseStatement("a=b", "a b =")
-        testParseStatement("a =+2\n", "a 2 u+ =")
+        testParseStatement("a =+2\n", "a 2 =")
         testParseStatement("a  =  -2", "a 2 u- =")
         testParseStatement("e1 = 0", "e1 0 =")
         testParseStatement("a=( b )", "a b =")
@@ -69,7 +70,7 @@ internal class TestParser {
         testParseStatement("1.0/0", "1.0 0 /")
         testParseStatement("1.0/a", "1.0 a /")
         testParseStatement("24a", "24 a *")
-        testParseStatement("+ 1.0", "1.0 u+")
+        testParseStatement("+ 1.0", "1.0")
         testParseStatement("-5", "5 u-")
         testParseStatement("4.1  ^ \t 1.1", "4.1 1.1 ^")
         testParseStatement("5!", "5 !")
@@ -92,7 +93,7 @@ internal class TestParser {
     fun testAssociationOfOperators() {
         testParseStatement("9 + 1 - 2", "9 1 + 2 -")
         testParseStatement("1.2 * 8 / 2.1", "1.2 8 * 2.1 /")
-        testParseStatement(" +-+++ 1.2", "1.2 u+ u+ u+ u- u+")
+        testParseStatement(" +-+++ 1.2", "1.2 u-")
         testParseStatement("2^3^9", "2 3 9 ^ ^")
         testParseStatement("2!!%!", "2 ! ! % !")
     }
@@ -106,16 +107,16 @@ internal class TestParser {
     fun testPriorityOfOperators() {
         testParseStatement("1 + 2 * 3", "1 2 3 * +")
         testParseStatement("1 - 2e", "1 2 e * -")
-        testParseStatement("1 - +-2e", "1 2 u- u+ e * -")
+        testParseStatement("1 - +-2e", "1 2 u- e * -")
         testParseStatement(
             "--+1.0 +-+-+-+ +-1.3",
-            "1.0 u+ u- u- 1.3 u- u+ u+ u- u+ u- u+ u- +"
+            "1.0 u- u- 1.3 u- u- u- u- +"
         )
-        testParseStatement("--1.0 *+ -1.0", "1.0 u- u- 1.0 u- u+ *")
-        testParseStatement("-7^+-2!", "7 2 ! u- u+ ^ u-")
+        testParseStatement("--1.0 *+ -1.0", "1.0 u- u- 1.0 u- *")
+        testParseStatement("-7^+-2!", "7 2 ! u- ^ u-")
         testParseStatement(
             "-7^+-2!!^-7  \t- +- \t4% * --4var/another_var",
-            "7 2 ! ! 7 u- ^ u- u+ ^ u- 4 % u- u+ 4 u- u- * var * another_var / -"
+            "7 2 ! ! 7 u- ^ u- ^ u- 4 % u- 4 u- u- * var * another_var / -"
         )
 
         testParseInvalidStatement("-7+", "expected expression, got end of line")
@@ -128,7 +129,7 @@ internal class TestParser {
         testParseStatement("(1 - 2)e", "1 2 - e *")
         testParseStatement(
             "(((-7)^(+2)!!)^-7 - +-4%) * (--4var/another_var)",
-            "7 u- 2 u+ ! ! ^ 7 u- ^ 4 % u- u+ - 4 u- u- var * another_var / *"
+            "7 u- 2 ! ! ^ 7 u- ^ 4 % u- - 4 u- u- var * another_var / *"
         )
 
         testParseInvalidStatement("()", "expected expression, got ')'")

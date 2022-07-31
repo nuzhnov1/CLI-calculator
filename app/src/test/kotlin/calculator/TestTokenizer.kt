@@ -1,5 +1,8 @@
 package calculator
 
+import calculator.tokenizer.CR
+import calculator.tokenizer.Token
+import calculator.tokenizer.Tokenizer
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.DisplayName
@@ -16,13 +19,13 @@ internal class TestTokenizer {
         """
     )
     fun testState0() {
-        testReadSingleToken("", Token(TokenKind.EOF, ""))
-        testReadSingleToken("\n", Token(TokenKind.EOL, "\n"))
-        testReadSingleToken("$CR", Token(TokenKind.EOL, "\n"))
-        testReadSingleToken("*", Token(TokenKind.OP, "*"))
-        testReadSingleToken(",", Token(TokenKind.COMMA, ","))
-        testReadSingleToken("=", Token(TokenKind.ASSIGN, "="))
-        testReadSingleToken("(", Token(TokenKind.PARENTHESES, "("))
+        testReadSingleToken("", Token(Token.Kind.EOF, ""))
+        testReadSingleToken("\n", Token(Token.Kind.EOL, "\n"))
+        testReadSingleToken("$CR", Token(Token.Kind.EOL, "\n"))
+        testReadSingleToken("*", Token(Token.Kind.OP, "*"))
+        testReadSingleToken(",", Token(Token.Kind.COMMA, ","))
+        testReadSingleToken("=", Token(Token.Kind.ASSIGN, "="))
+        testReadSingleToken("(", Token(Token.Kind.PARENTHESES, "("))
 
         testReadInvalidTokens("\n\n@", "illegal character '@'")
     }
@@ -35,15 +38,15 @@ internal class TestTokenizer {
         """
     )
     fun testState1() {
-        testReadSingleToken("0110", Token(TokenKind.INT, "0110"))
+        testReadSingleToken("0110", Token(Token.Kind.INT, "0110"))
         testReadMultipleTokens("0123456789$CR\n", listOf(
-            Token(TokenKind.INT, "0123456789"),
-            Token(TokenKind.EOL, "\n")
+            Token(Token.Kind.INT, "0123456789"),
+            Token(Token.Kind.EOL, "\n")
         ))
         testReadMultipleTokens("123a", listOf(
-            Token(TokenKind.INT, "123"),
-            Token(TokenKind.OP, "*"),
-            Token(TokenKind.IDENT, "a")
+            Token(Token.Kind.INT, "123"),
+            Token(Token.Kind.OP, "*"),
+            Token(Token.Kind.IDENT, "a")
         ))
 
         testReadInvalidTokens("123@", "illegal character '@'")
@@ -67,16 +70,16 @@ internal class TestTokenizer {
         """
     )
     fun testState3() {
-        testReadSingleToken("1.1", Token(TokenKind.FLOAT, "1.1"))
+        testReadSingleToken("1.1", Token(Token.Kind.FLOAT, "1.1"))
 
         testReadMultipleTokens(".1+", listOf(
-            Token(TokenKind.FLOAT, ".1"),
-            Token(TokenKind.OP, "+")
+            Token(Token.Kind.FLOAT, ".1"),
+            Token(Token.Kind.OP, "+")
         ))
         testReadMultipleTokens("1.e", listOf(
-            Token(TokenKind.FLOAT, "1."),
-            Token(TokenKind.OP, "*"),
-            Token(TokenKind.IDENT, "e")
+            Token(Token.Kind.FLOAT, "1."),
+            Token(Token.Kind.OP, "*"),
+            Token(Token.Kind.IDENT, "e")
         ))
 
         testReadInvalidTokens("1.@", "illegal character '@'")
@@ -90,17 +93,17 @@ internal class TestTokenizer {
         """
     )
     fun testState4() {
-        testReadSingleToken("_1", Token(TokenKind.IDENT, "_1"))
-        testReadSingleToken("val", Token(TokenKind.IDENT, "val"))
-        testReadSingleToken("e1", Token(TokenKind.IDENT, "e1"))
+        testReadSingleToken("_1", Token(Token.Kind.IDENT, "_1"))
+        testReadSingleToken("val", Token(Token.Kind.IDENT, "val"))
+        testReadSingleToken("e1", Token(Token.Kind.IDENT, "e1"))
 
         testReadMultipleTokens("abe1+", listOf(
-            Token(TokenKind.IDENT, "abe1"),
-            Token(TokenKind.OP, "+")
+            Token(Token.Kind.IDENT, "abe1"),
+            Token(Token.Kind.OP, "+")
         ))
         testReadMultipleTokens("a1 \t\t\t \t\t \t", listOf(
-            Token(TokenKind.IDENT, "a1"),
-            Token(TokenKind.SPACES, " \t\t\t \t\t \t"),
+            Token(Token.Kind.IDENT, "a1"),
+            Token(Token.Kind.SPACES, " \t\t\t \t\t \t"),
         ))
 
         testReadInvalidTokens("e1.", "illegal character '.'")
@@ -113,15 +116,15 @@ internal class TestTokenizer {
         """
     )
     fun testState5() {
-        testReadSingleToken("/", Token(TokenKind.OP, "/"))
+        testReadSingleToken("/", Token(Token.Kind.OP, "/"))
 
         testReadMultipleTokens("/1", listOf(
-            Token(TokenKind.OP, "/"),
-            Token(TokenKind.INT, "1"),
+            Token(Token.Kind.OP, "/"),
+            Token(Token.Kind.INT, "1"),
         ))
         testReadMultipleTokens("/ \t", listOf(
-            Token(TokenKind.OP, "/"),
-            Token(TokenKind.SPACES, " \t"),
+            Token(Token.Kind.OP, "/"),
+            Token(Token.Kind.SPACES, " \t"),
         ))
 
         testReadInvalidTokens("/.", "illegal character '.'")
@@ -135,13 +138,13 @@ internal class TestTokenizer {
         """
     )
     fun testState6() {
-        testReadSingleToken("/exit", Token(TokenKind.COMMAND, "/exit"))
-        testReadSingleToken("/help", Token(TokenKind.COMMAND, "/help"))
-        testReadSingleToken("/help1", Token(TokenKind.COMMAND, "/help1"))
+        testReadSingleToken("/exit", Token(Token.Kind.COMMAND, "/exit"))
+        testReadSingleToken("/help", Token(Token.Kind.COMMAND, "/help"))
+        testReadSingleToken("/help1", Token(Token.Kind.COMMAND, "/help1"))
 
         testReadMultipleTokens("/exit+", listOf(
-            Token(TokenKind.COMMAND, "/exit"),
-            Token(TokenKind.OP, "+"),
+            Token(Token.Kind.COMMAND, "/exit"),
+            Token(Token.Kind.OP, "+"),
         ))
 
         testReadInvalidTokens("/exit#", "illegal character '#'")
@@ -155,11 +158,11 @@ internal class TestTokenizer {
         """
     )
     fun testState7() {
-        testReadSingleToken("   ", Token(TokenKind.SPACES, "   "))
+        testReadSingleToken("   ", Token(Token.Kind.SPACES, "   "))
 
         testReadMultipleTokens(" /", listOf(
-            Token(TokenKind.SPACES, " "),
-            Token(TokenKind.OP, "/"),
+            Token(Token.Kind.SPACES, " "),
+            Token(Token.Kind.OP, "/"),
         ))
 
         testReadInvalidTokens("   $", "illegal character '$'")
@@ -172,35 +175,35 @@ internal class TestTokenizer {
         """
     )
     fun state8() {
-        testReadSingleToken(")", Token(TokenKind.PARENTHESES, ")"))
+        testReadSingleToken(")", Token(Token.Kind.PARENTHESES, ")"))
 
         testReadMultipleTokens("))", listOf(
-            Token(TokenKind.PARENTHESES, ")"),
-            Token(TokenKind.PARENTHESES, ")")
+            Token(Token.Kind.PARENTHESES, ")"),
+            Token(Token.Kind.PARENTHESES, ")")
         ))
         testReadMultipleTokens(")+", listOf(
-            Token(TokenKind.PARENTHESES, ")"),
-            Token(TokenKind.OP, "+")
+            Token(Token.Kind.PARENTHESES, ")"),
+            Token(Token.Kind.OP, "+")
         ))
         testReadMultipleTokens("),", listOf(
-            Token(TokenKind.PARENTHESES, ")"),
-            Token(TokenKind.COMMA, ",")
+            Token(Token.Kind.PARENTHESES, ")"),
+            Token(Token.Kind.COMMA, ",")
         ))
 
         testReadMultipleTokens(")1", listOf(
-            Token(TokenKind.PARENTHESES, ")"),
-            Token(TokenKind.OP, "*"),
-            Token(TokenKind.INT, "1")
+            Token(Token.Kind.PARENTHESES, ")"),
+            Token(Token.Kind.OP, "*"),
+            Token(Token.Kind.INT, "1")
         ))
         testReadMultipleTokens(")(", listOf(
-            Token(TokenKind.PARENTHESES, ")"),
-            Token(TokenKind.OP, "*"),
-            Token(TokenKind.PARENTHESES, "(")
+            Token(Token.Kind.PARENTHESES, ")"),
+            Token(Token.Kind.OP, "*"),
+            Token(Token.Kind.PARENTHESES, "(")
         ))
         testReadMultipleTokens(")e", listOf(
-            Token(TokenKind.PARENTHESES, ")"),
-            Token(TokenKind.OP, "*"),
-            Token(TokenKind.IDENT, "e")
+            Token(Token.Kind.PARENTHESES, ")"),
+            Token(Token.Kind.OP, "*"),
+            Token(Token.Kind.IDENT, "e")
         ))
 
         testReadInvalidTokens(").", "illegal character '.'")
@@ -215,22 +218,22 @@ internal class TestTokenizer {
     )
     fun testExpression1() {
         testReadMultipleTokens("+-+1  / -2 * 3e1\n", listOf(
-            Token(TokenKind.OP, "+"),
-            Token(TokenKind.OP, "-"),
-            Token(TokenKind.OP, "+"),
-            Token(TokenKind.INT, "1"),
-            Token(TokenKind.SPACES, "  "),
-            Token(TokenKind.OP, "/"),
-            Token(TokenKind.SPACES, " "),
-            Token(TokenKind.OP, "-"),
-            Token(TokenKind.INT, "2"),
-            Token(TokenKind.SPACES, " "),
-            Token(TokenKind.OP, "*"),
-            Token(TokenKind.SPACES, " "),
-            Token(TokenKind.INT, "3"),
-            Token(TokenKind.OP, "*"),
-            Token(TokenKind.IDENT, "e1"),
-            Token(TokenKind.EOL, "\n")
+            Token(Token.Kind.OP, "+"),
+            Token(Token.Kind.OP, "-"),
+            Token(Token.Kind.OP, "+"),
+            Token(Token.Kind.INT, "1"),
+            Token(Token.Kind.SPACES, "  "),
+            Token(Token.Kind.OP, "/"),
+            Token(Token.Kind.SPACES, " "),
+            Token(Token.Kind.OP, "-"),
+            Token(Token.Kind.INT, "2"),
+            Token(Token.Kind.SPACES, " "),
+            Token(Token.Kind.OP, "*"),
+            Token(Token.Kind.SPACES, " "),
+            Token(Token.Kind.INT, "3"),
+            Token(Token.Kind.OP, "*"),
+            Token(Token.Kind.IDENT, "e1"),
+            Token(Token.Kind.EOL, "\n")
         ))
     }
 
@@ -242,29 +245,29 @@ internal class TestTokenizer {
     )
     fun testExpression2() {
         testReadMultipleTokens("+-+1  /exit \t -2 / 3E-a1b(1)2\n", listOf(
-            Token(TokenKind.OP, "+"),
-            Token(TokenKind.OP, "-"),
-            Token(TokenKind.OP, "+"),
-            Token(TokenKind.INT, "1"),
-            Token(TokenKind.SPACES, "  "),
-            Token(TokenKind.COMMAND, "/exit"),
-            Token(TokenKind.SPACES, " \t "),
-            Token(TokenKind.OP, "-"),
-            Token(TokenKind.INT, "2"),
-            Token(TokenKind.SPACES, " "),
-            Token(TokenKind.OP, "/"),
-            Token(TokenKind.SPACES, " "),
-            Token(TokenKind.INT, "3"),
-            Token(TokenKind.OP, "*"),
-            Token(TokenKind.IDENT, "E"),
-            Token(TokenKind.OP, "-"),
-            Token(TokenKind.IDENT, "a1b"),
-            Token(TokenKind.PARENTHESES, "("),
-            Token(TokenKind.INT, "1"),
-            Token(TokenKind.PARENTHESES, ")"),
-            Token(TokenKind.OP, "*"),
-            Token(TokenKind.INT, "2"),
-            Token(TokenKind.EOL, "\n")
+            Token(Token.Kind.OP, "+"),
+            Token(Token.Kind.OP, "-"),
+            Token(Token.Kind.OP, "+"),
+            Token(Token.Kind.INT, "1"),
+            Token(Token.Kind.SPACES, "  "),
+            Token(Token.Kind.COMMAND, "/exit"),
+            Token(Token.Kind.SPACES, " \t "),
+            Token(Token.Kind.OP, "-"),
+            Token(Token.Kind.INT, "2"),
+            Token(Token.Kind.SPACES, " "),
+            Token(Token.Kind.OP, "/"),
+            Token(Token.Kind.SPACES, " "),
+            Token(Token.Kind.INT, "3"),
+            Token(Token.Kind.OP, "*"),
+            Token(Token.Kind.IDENT, "E"),
+            Token(Token.Kind.OP, "-"),
+            Token(Token.Kind.IDENT, "a1b"),
+            Token(Token.Kind.PARENTHESES, "("),
+            Token(Token.Kind.INT, "1"),
+            Token(Token.Kind.PARENTHESES, ")"),
+            Token(Token.Kind.OP, "*"),
+            Token(Token.Kind.INT, "2"),
+            Token(Token.Kind.EOL, "\n")
         ))
     }
 
@@ -276,31 +279,31 @@ internal class TestTokenizer {
     )
     fun testExpression3() {
         testReadMultipleTokens("+--+1 ++++ ---3e1 +-+ 3eA", listOf(
-            Token(TokenKind.OP, "+"),
-            Token(TokenKind.OP, "-"),
-            Token(TokenKind.OP, "-"),
-            Token(TokenKind.OP, "+"),
-            Token(TokenKind.INT, "1"),
-            Token(TokenKind.SPACES, " "),
-            Token(TokenKind.OP, "+"),
-            Token(TokenKind.OP, "+"),
-            Token(TokenKind.OP, "+"),
-            Token(TokenKind.OP, "+"),
-            Token(TokenKind.SPACES, " "),
-            Token(TokenKind.OP, "-"),
-            Token(TokenKind.OP, "-"),
-            Token(TokenKind.OP, "-"),
-            Token(TokenKind.INT, "3"),
-            Token(TokenKind.OP, "*"),
-            Token(TokenKind.IDENT, "e1"),
-            Token(TokenKind.SPACES, " "),
-            Token(TokenKind.OP, "+"),
-            Token(TokenKind.OP, "-"),
-            Token(TokenKind.OP, "+"),
-            Token(TokenKind.SPACES, " "),
-            Token(TokenKind.INT, "3"),
-            Token(TokenKind.OP, "*"),
-            Token(TokenKind.IDENT, "eA"),
+            Token(Token.Kind.OP, "+"),
+            Token(Token.Kind.OP, "-"),
+            Token(Token.Kind.OP, "-"),
+            Token(Token.Kind.OP, "+"),
+            Token(Token.Kind.INT, "1"),
+            Token(Token.Kind.SPACES, " "),
+            Token(Token.Kind.OP, "+"),
+            Token(Token.Kind.OP, "+"),
+            Token(Token.Kind.OP, "+"),
+            Token(Token.Kind.OP, "+"),
+            Token(Token.Kind.SPACES, " "),
+            Token(Token.Kind.OP, "-"),
+            Token(Token.Kind.OP, "-"),
+            Token(Token.Kind.OP, "-"),
+            Token(Token.Kind.INT, "3"),
+            Token(Token.Kind.OP, "*"),
+            Token(Token.Kind.IDENT, "e1"),
+            Token(Token.Kind.SPACES, " "),
+            Token(Token.Kind.OP, "+"),
+            Token(Token.Kind.OP, "-"),
+            Token(Token.Kind.OP, "+"),
+            Token(Token.Kind.SPACES, " "),
+            Token(Token.Kind.INT, "3"),
+            Token(Token.Kind.OP, "*"),
+            Token(Token.Kind.IDENT, "eA"),
         ))
     }
 
@@ -313,7 +316,7 @@ internal class TestTokenizer {
     )
     fun testLongIdentifier() {
         val longIdentifier = "a".repeat(10000)
-        testReadSingleToken(longIdentifier, Token(TokenKind.IDENT, longIdentifier))
+        testReadSingleToken(longIdentifier, Token(Token.Kind.IDENT, longIdentifier))
     }
 
 

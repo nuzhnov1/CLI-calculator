@@ -24,7 +24,7 @@ ExprPriority5 ::= ExprPriority4 ExprPriority5Rest                               
 ExprPriority5Rest ::= "*" ExprPriority4 #MulToPostfix ExprPriority5Rest                         |
                   |   "/" ExprPriority4 #DivToPostfix ExprPriority5Rest                         |
                   |   epsilon                                                                   |
-ExprPriority4 ::= "+" ExprPriority4 #UnPlusToPostfix                                            |
+ExprPriority4 ::= "+" ExprPriority4                                                             |
               |   "-" ExprPriority4 #UnMinusToPostfix                                           |
               |   ExprPriority3                                                                 |
 ExprPriority3 ::= ExprPriority2 ExprPriority3Rest                                               |
@@ -51,7 +51,6 @@ TokenToPostfix ::= { toPostfix(curToken)) }                                     
 AssignToPostfix ::= { toPostfix(Token(TokenType.OP, "=")) }                                     |
 BinPlusToPostfix ::= { toPostfix(Token(TokenType.OP, "+")) }                                    |
 BinMinusToPostfix ::= { toPostfix(Token(TokenType.OP, "-")) }                                   |
-UnPlusToPostfix ::= { toPostfix(Token(TokenType.OP, "u+")) }                                    |
 UnMinusToPostfix ::= { toPostfix(Token(TokenType.OP, "u-")) }                                   |
 MulToPostfix ::= { toPostfix(Token(TokenType.OP, "*")) }                                        |
 DivToPostfix ::= { toPostfix(Token(TokenType.OP, "/")) }                                        |
