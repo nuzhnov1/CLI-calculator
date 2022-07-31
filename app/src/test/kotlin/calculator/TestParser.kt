@@ -169,6 +169,19 @@ internal class TestParser {
         testParseInvalidStatement("log(2 + 3, 1", "expected ')', got end of line")
     }
 
+    @Test
+    @DisplayName(
+        """
+        Crash test: processing a set of nested expressions.
+        """
+    )
+    fun testMultipleNestedExpressions() {
+        val nestingDepth = 2000
+        val expression = "(".repeat(nestingDepth) + "1" + ")".repeat(nestingDepth)
+
+        testParseStatement(expression, "1")
+    }
+
 
     private fun testParseStatement(inputString: String, expectedPostfixRecord: String) {
         val parser = Parser()
