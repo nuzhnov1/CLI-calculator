@@ -3,15 +3,34 @@ package calculator
 import java.io.Reader
 
 internal class Parser {
+    private enum class NonTerminal : GrammarSymbol {
+        // Regular non-terminals:
+        Expr, ExprRest, ExprPriority5, ExprPriority5Rest,
+        ExprPriority4, ExprPriority3, ExprPriority3Rest,
+        ExprPriority2, ExprPriority2Rest, ExprPriority1,
+        FunctionCallOrEpsilon, ActualArgumentsList,
+        ActualArgumentsListRest,
+
+        // Non-terminals of actions:
+        AddBinPlusToPostfixRecord, AddBinMinusToPostfixRecord,
+        AddUnPlusToPostfixRecord, AddUnMinusToPostfixRecord,
+        AddMulToPostfixRecord, AddDivToPostfixRecord,
+        AddPowToPostfixRecord, AddInvokeActionToPostfixRecord,
+        AddPutArgActionToPostfixRecord
+    }
+
+
     private lateinit var tokenizer: Tokenizer
     private lateinit var postfixRecord: MutableList<Token>
     private lateinit var curToken: Token
+    private lateinit var symbolsStack: ArrayDeque<GrammarSymbol>
 
 
     fun parse(reader: Reader): List<Token> {
         tokenizer = Tokenizer(reader)
         postfixRecord = mutableListOf()
         curToken = readToken()
+        symbolsStack = ArrayDeque()
 
         tokenizer.use { parseStatement() }
 
@@ -34,7 +53,8 @@ internal class Parser {
         val token = readToken()
 
         return if (token.tokenKind == TokenKind.COMMAND) {
-            // Splitting the command token into a division operation and an identifier:
+            // Splitting the command token into a division operation and an identifier
+            // For example: "/abc" -> "/" and "abc":
             val lexem = token.lexem
 
             // Pushing back identifier:
@@ -120,90 +140,141 @@ internal class Parser {
     }
 
     private fun parseExpr() {
-        parseExprPriority5()
-        parseExprRest()
+        symbolsStack.addFirst(NonTerminal.Expr)
+
+        while (!symbolsStack.isEmpty()) {
+            when (val symbol = symbolsStack.removeFirst()) {
+                // Processing regular non-terminals:
+
+                NonTerminal.Expr -> {
+                    symbolsStack.addFirst(NonTerminal.ExprRest)
+                    symbolsStack.addFirst(NonTerminal.ExprPriority5)
+                }
+
+                NonTerminal.ExprRest -> parseExprRest()
+                NonTerminal.ExprPriority5 -> parseExprPriority5()
+                NonTerminal.ExprPriority5Rest -> parseExprPriority5Rest()
+                NonTerminal.ExprPriority4 -> parseExprPriority4()
+                NonTerminal.ExprPriority3 -> parseExprPriority3()
+                NonTerminal.ExprPriority3Rest -> parseExprPriority3Rest()
+                NonTerminal.ExprPriority2 -> parseExprPriority2()
+                NonTerminal.ExprPriority2Rest -> parseExprPriority2Rest()
+                NonTerminal.ExprPriority1 -> parseExprPriority1()
+                NonTerminal.FunctionCallOrEpsilon -> parseFunctionCallOrEpsilon()
+                NonTerminal.ActualArgumentsList -> parseActualArgumentsList()
+                NonTerminal.ActualArgumentsListRest -> parseActualArgumentsListRest()
+
+                // Processing non-terminals of actions:
+
+                NonTerminal.AddBinPlusToPostfixRecord -> postfixRecord.add(Token(TokenKind.OP, "+"))
+                NonTerminal.AddBinMinusToPostfixRecord -> postfixRecord.add(Token(TokenKind.OP, "-"))
+                NonTerminal.AddUnPlusToPostfixRecord -> postfixRecord.add(Token(TokenKind.OP, "u+"))
+                NonTerminal.AddUnMinusToPostfixRecord -> postfixRecord.add(Token(TokenKind.OP, "u-"))
+                NonTerminal.AddMulToPostfixRecord -> postfixRecord.add(Token(TokenKind.OP, "*"))
+                NonTerminal.AddDivToPostfixRecord -> postfixRecord.add(Token(TokenKind.OP, "/"))
+                NonTerminal.AddPowToPostfixRecord -> postfixRecord.add(Token(TokenKind.OP, "^"))
+                NonTerminal.AddInvokeActionToPostfixRecord -> postfixRecord.add(Token(TokenKind.ACTION, "invoke"))
+                NonTerminal.AddPutArgActionToPostfixRecord -> postfixRecord.add(Token(TokenKind.ACTION, "put_arg"))
+
+                // Processing terminals (tokens):
+
+                else -> {
+                    val expectedToken = symbol as Token
+
+                    if (curToken != expectedToken) {
+                        errorReport("'${expectedToken.lexem}'", curToken)
+                    } else {
+                        curToken = readTokenInExpr()
+                    }
+                }
+            }
+        }
     }
 
-    private tailrec fun parseExprRest(): Unit =
+    private fun parseExprRest() {
         when (curToken.lexem) {
-            "+", "-" -> {
-                val lexem = curToken.lexem
-
+            "+" -> {
                 curToken = readTokenInExpr()
-                parseExprPriority5()
-                postfixRecord.add(Token(TokenKind.OP, lexem))
-                parseExprRest()
+                symbolsStack.addFirst(NonTerminal.ExprRest)
+                symbolsStack.addFirst(NonTerminal.AddBinPlusToPostfixRecord)
+                symbolsStack.addFirst(NonTerminal.ExprPriority5)
             }
 
-            else -> Unit
+            "-" -> {
+                curToken = readTokenInExpr()
+                symbolsStack.addFirst(NonTerminal.ExprRest)
+                symbolsStack.addFirst(NonTerminal.AddBinMinusToPostfixRecord)
+                symbolsStack.addFirst(NonTerminal.ExprPriority5)
+            }
         }
+    }
 
     private fun parseExprPriority5() {
-        parseExprPriority4()
-        parseExprPriority5Rest()
+        symbolsStack.addFirst(NonTerminal.ExprPriority5Rest)
+        symbolsStack.addFirst(NonTerminal.ExprPriority4)
     }
 
-    private tailrec fun parseExprPriority5Rest(): Unit =
+    private fun parseExprPriority5Rest() {
         when (curToken.lexem) {
-            "*", "/" -> {
-                val lexem = curToken.lexem
-
+            "*" -> {
                 curToken = readTokenInExpr()
-                parseExprPriority4()
-                postfixRecord.add(Token(TokenKind.OP, lexem))
-                parseExprPriority5Rest()
+                symbolsStack.addFirst(NonTerminal.ExprPriority5Rest)
+                symbolsStack.addFirst(NonTerminal.AddMulToPostfixRecord)
+                symbolsStack.addFirst(NonTerminal.ExprPriority4)
             }
 
-            else -> Unit
+            "/" -> {
+                curToken = readTokenInExpr()
+                symbolsStack.addFirst(NonTerminal.ExprPriority5Rest)
+                symbolsStack.addFirst(NonTerminal.AddDivToPostfixRecord)
+                symbolsStack.addFirst(NonTerminal.ExprPriority4)
+            }
         }
+    }
 
     private fun parseExprPriority4() {
-        if (curToken.lexem == "+" || curToken.lexem == "-") {
-            val lexem = curToken.lexem
+        when (curToken.lexem) {
+            "+" -> {
+                curToken = readTokenInExpr()
+                symbolsStack.addFirst(NonTerminal.AddUnPlusToPostfixRecord)
+                symbolsStack.addFirst(NonTerminal.ExprPriority4)
+            }
 
-            curToken = readTokenInExpr()
-            parseExprPriority4()
-            // Adding the prefix "u" to the operator to distinguish between unary and binary operations:
-            postfixRecord.add(Token(TokenKind.OP, "u$lexem"))
-        } else {
-            parseExprPriority3()
+            "-" -> {
+                curToken = readTokenInExpr()
+                symbolsStack.addFirst(NonTerminal.AddUnMinusToPostfixRecord)
+                symbolsStack.addFirst(NonTerminal.ExprPriority4)
+            }
+
+            else -> symbolsStack.addFirst(NonTerminal.ExprPriority3)
         }
     }
 
     private fun parseExprPriority3() {
-        parseExprPriority2()
-        parseExprPriority3Rest()
+        symbolsStack.addFirst(NonTerminal.ExprPriority3Rest)
+        symbolsStack.addFirst(NonTerminal.ExprPriority2)
     }
 
-    private tailrec fun parseExprPriority3Rest(): Unit =
-        when (curToken.lexem) {
-            "^" -> {
-                curToken = readTokenInExpr()
-                parseExprPriority4()
-                postfixRecord.add(Token(TokenKind.OP, "^"))
-                parseExprPriority3Rest()
-            }
-
-            else -> Unit
+    private fun parseExprPriority3Rest() {
+        if (curToken.lexem == "^") {
+            curToken = readTokenInExpr()
+            symbolsStack.addFirst(NonTerminal.ExprPriority3Rest)
+            symbolsStack.addFirst(NonTerminal.AddPowToPostfixRecord)
+            symbolsStack.addFirst(NonTerminal.ExprPriority4)
         }
+    }
 
     private fun parseExprPriority2() {
-        parseExprPriority1()
-        parseExprPriority2Rest()
+        symbolsStack.addFirst(NonTerminal.ExprPriority2Rest)
+        symbolsStack.addFirst(NonTerminal.ExprPriority1)
     }
 
-    private tailrec fun parseExprPriority2Rest(): Unit =
-        when (curToken.lexem) {
-            "!", "%" -> {
-                val lexem = curToken.lexem
-
-                curToken = readTokenInExpr()
-                postfixRecord.add(Token(TokenKind.OP, lexem))
-                parseExprPriority2Rest()
-            }
-
-            else -> Unit
+    private fun parseExprPriority2Rest() {
+        while (curToken.lexem == "!" || curToken.lexem == "%") {
+            postfixRecord.add(curToken)
+            curToken = readTokenInExpr()
         }
+    }
 
     private fun parseExprPriority1() {
         when (curToken.tokenKind) {
@@ -221,13 +292,8 @@ internal class Parser {
             TokenKind.PARENTHESES -> {
                 if (curToken.lexem == "(") {
                     curToken = readTokenInExpr()
-                    parseExpr()
-
-                    if (curToken.lexem != ")") {
-                        errorReport("')'", curToken)
-                    } else {
-                        curToken = readTokenInExpr()
-                    }
+                    symbolsStack.addFirst(Token(TokenKind.PARENTHESES, ")"))
+                    symbolsStack.addFirst(NonTerminal.Expr)
                 } else {
                     errorReport("expression", curToken)
                 }
@@ -241,37 +307,29 @@ internal class Parser {
         if (curToken.lexem == "(") {
             curToken = readTokenInExpr()
 
-            curToken = if (curToken.lexem == ")") {
-                readTokenInExpr()
+            if (curToken.lexem == ")") {
+                curToken = readTokenInExpr()
+                postfixRecord.add(Token(TokenKind.ACTION, "invoke"))
             } else {
-                parseActualArgumentsList()
-
-                if (curToken.lexem != ")") {
-                    errorReport("')'", curToken)
-                } else {
-                    readTokenInExpr()
-                }
+                symbolsStack.addFirst(NonTerminal.AddInvokeActionToPostfixRecord)
+                symbolsStack.addFirst(Token(TokenKind.PARENTHESES, ")"))
+                symbolsStack.addFirst(NonTerminal.ActualArgumentsList)
             }
-
-            postfixRecord.add(Token(TokenKind.ACTION, "invoke"))
         }
     }
 
     private fun parseActualArgumentsList() {
-        parseExpr()
-        postfixRecord.add(Token(TokenKind.ACTION, "put_arg"))
-        parseActualArgumentsListRest()
+        symbolsStack.addFirst(NonTerminal.ActualArgumentsListRest)
+        symbolsStack.addFirst(NonTerminal.AddPutArgActionToPostfixRecord)
+        symbolsStack.addFirst(NonTerminal.Expr)
     }
 
-    private tailrec fun parseActualArgumentsListRest(): Unit =
-        when (curToken.tokenKind) {
-            TokenKind.COMMA -> {
-                curToken = readTokenInExpr()
-                parseExpr()
-                postfixRecord.add(Token(TokenKind.ACTION, "put_arg"))
-                parseActualArgumentsListRest()
-            }
-
-            else -> Unit
+    private fun parseActualArgumentsListRest() {
+        if (curToken.tokenKind == TokenKind.COMMA) {
+            curToken = readTokenInExpr()
+            symbolsStack.addFirst(NonTerminal.ActualArgumentsListRest)
+            symbolsStack.addFirst(NonTerminal.AddPutArgActionToPostfixRecord)
+            symbolsStack.addFirst(NonTerminal.Expr)
         }
+    }
 }
