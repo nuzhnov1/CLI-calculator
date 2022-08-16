@@ -5,8 +5,10 @@ import java.math.MathContext
 fun main() {
     val calculator = Calculator(MathContext.DECIMAL128)
 
+    printWelcomeMessage()
+
     while (true) {
-        val input = readLine()
+        val input = print(">> ").run { readLine() }
 
         try {
             when (val result = calculator.executeStatement(input)) {
@@ -20,4 +22,10 @@ fun main() {
             println(e.localizedMessage)
         }
     }
+}
+
+
+private fun printWelcomeMessage() {
+    println("The command line calculator.")
+    println("To get acquainted with the program - execute the command: /help")
 }
