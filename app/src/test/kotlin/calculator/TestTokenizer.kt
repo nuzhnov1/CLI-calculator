@@ -3,22 +3,27 @@ package calculator
 import calculator.tokenizer.CR
 import calculator.tokenizer.Token
 import calculator.tokenizer.Tokenizer
+import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Disabled
-import org.junit.jupiter.api.DisplayName
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import java.io.StringReader
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @DisplayName("Testing methods of the Tokenizer class")
 internal class TestTokenizer {
+    @BeforeAll
+    fun start() {
+        println("Testing methods of the Tokenizer class...")
+    }
+
     @Test
     @DisplayName(
         """
-        Testing of the zero state of a finite state machine (the "next" method).
+        Testing of the zero state of a finite state machine (the 'next' method)
         """
     )
     fun testState0() {
+        print("\tTesting of the zero state of a finite state machine (the 'next' method)... ")
+
         testReadSingleToken("", Token(Token.Kind.EOF, ""))
         testReadSingleToken("\n", Token(Token.Kind.EOL, "\n"))
         testReadSingleToken("$CR", Token(Token.Kind.EOL, "\n"))
@@ -27,72 +32,80 @@ internal class TestTokenizer {
         testReadSingleToken("=", Token(Token.Kind.ASSIGN, "="))
         testReadSingleToken("(", Token(Token.Kind.PARENTHESES, "("))
 
-        testReadInvalidTokens("\n\n@", "illegal character '@'")
+        testReadInvalidTokens("\n\n@", "Illegal character '@'")
+
+        println("OK")
     }
 
     @Test
     @DisplayName(
         """
-        Testing of the 1st state of a finite state machine (the "state1" method).
-        Testing reading integer numbers.
+        Testing of the 1st state of a finite state machine (the 'state1' method).
+        Testing reading integer numbers
         """
     )
     fun testState1() {
-        testReadSingleToken("0110", Token(Token.Kind.INT, "0110"))
+        print("\tTesting of the 1st state of a finite state machine (the 'state1' method)... ")
+
+        testReadSingleToken("0110", Token(Token.Kind.NUMBER, "0110"))
+
         testReadMultipleTokens("0123456789$CR\n", listOf(
-            Token(Token.Kind.INT, "0123456789"),
+            Token(Token.Kind.NUMBER, "0123456789"),
             Token(Token.Kind.EOL, "\n")
         ))
-        testReadMultipleTokens("123a", listOf(
-            Token(Token.Kind.INT, "123"),
-            Token(Token.Kind.OP, "*"),
-            Token(Token.Kind.IDENT, "a")
-        ))
 
-        testReadInvalidTokens("123@", "illegal character '@'")
+        testReadInvalidTokens("123@", "Illegal character '@'")
+
+        println("OK")
     }
 
     @Test
     @DisplayName(
         """
-        Testing of the 2nd state of a finite state machine (the "state2" method).
+        Testing of the 2nd state of a finite state machine (the 'state2' method)
         """
     )
     fun testState2() {
-        testReadInvalidTokens(".@", "illegal character '.'")
+        print("\tTesting of the 2nd state of a finite state machine (the 'state2' method)... ")
+        testReadInvalidTokens(".@", "Illegal character '.'")
+        println("OK")
     }
 
     @Test
     @DisplayName(
         """
-        Testing of the 3rd state of a finite state machine (the "state3" method).
-        Testing reading float numbers.
+        Testing of the 3rd state of a finite state machine (the 'state3' method).
+        Testing reading float numbers
         """
     )
     fun testState3() {
-        testReadSingleToken("1.1", Token(Token.Kind.FLOAT, "1.1"))
+        print("\tTesting of the 3rd state of a finite state machine (the 'state3' method)... ")
+        testReadSingleToken("1.1", Token(Token.Kind.NUMBER, "1.1"))
 
         testReadMultipleTokens(".1+", listOf(
-            Token(Token.Kind.FLOAT, ".1"),
+            Token(Token.Kind.NUMBER, ".1"),
             Token(Token.Kind.OP, "+")
         ))
         testReadMultipleTokens("1.e", listOf(
-            Token(Token.Kind.FLOAT, "1."),
-            Token(Token.Kind.OP, "*"),
+            Token(Token.Kind.NUMBER, "1."),
             Token(Token.Kind.IDENT, "e")
         ))
 
-        testReadInvalidTokens("1.@", "illegal character '@'")
+        testReadInvalidTokens("1.@", "Illegal character '@'")
+
+        println("OK")
     }
 
     @Test
     @DisplayName(
         """
-        Testing of the 4th state of a finite state machine (the "state4" method).
-        Testing reading identifiers.
+        Testing of the 4th state of a finite state machine (the 'state4' method).
+        Testing reading identifiers
         """
     )
     fun testState4() {
+        print("\tTesting of the 4th state of a finite state machine (the 'state4' method)... ")
+
         testReadSingleToken("_1", Token(Token.Kind.IDENT, "_1"))
         testReadSingleToken("val", Token(Token.Kind.IDENT, "val"))
         testReadSingleToken("e1", Token(Token.Kind.IDENT, "e1"))
@@ -106,38 +119,46 @@ internal class TestTokenizer {
             Token(Token.Kind.SPACES, " \t\t\t \t\t \t"),
         ))
 
-        testReadInvalidTokens("e1.", "illegal character '.'")
+        testReadInvalidTokens("e1.", "Illegal character '.'")
+
+        println("OK")
     }
 
     @Test
     @DisplayName(
         """
-        Testing of the 5th state of a finite state machine (the "state5" method).
+        Testing of the 5th state of a finite state machine (the 'state5' method)
         """
     )
     fun testState5() {
+        print("\tTesting of the 5th state of a finite state machine (the 'state5' method)... ")
+
         testReadSingleToken("/", Token(Token.Kind.OP, "/"))
 
         testReadMultipleTokens("/1", listOf(
             Token(Token.Kind.OP, "/"),
-            Token(Token.Kind.INT, "1"),
+            Token(Token.Kind.NUMBER, "1"),
         ))
         testReadMultipleTokens("/ \t", listOf(
             Token(Token.Kind.OP, "/"),
             Token(Token.Kind.SPACES, " \t"),
         ))
 
-        testReadInvalidTokens("/.", "illegal character '.'")
+        testReadInvalidTokens("/.", "Illegal character '.'")
+
+        println("OK")
     }
 
     @Test
     @DisplayName(
         """
-        Testing of the 6th state of a finite state machine (the "state6" method).
-        Testing reading commands.
+        Testing of the 6th state of a finite state machine (the 'state6' method).
+        Testing reading commands
         """
     )
     fun testState6() {
+        print("\tTesting of the 6th state of a finite state machine (the 'state6' method)... ")
+
         testReadSingleToken("/exit", Token(Token.Kind.COMMAND, "/exit"))
         testReadSingleToken("/help", Token(Token.Kind.COMMAND, "/help"))
         testReadSingleToken("/help1", Token(Token.Kind.COMMAND, "/help1"))
@@ -147,17 +168,21 @@ internal class TestTokenizer {
             Token(Token.Kind.OP, "+"),
         ))
 
-        testReadInvalidTokens("/exit#", "illegal character '#'")
+        testReadInvalidTokens("/exit#", "Illegal character '#'")
+
+        println("OK")
     }
 
     @Test
     @DisplayName(
         """
-        Testing of the 7th state of a finite state machine (the "state7" method).
-        Testing reading spaces.
+        Testing of the 7th state of a finite state machine (the 'state7' method).
+        Testing reading spaces
         """
     )
     fun testState7() {
+        print("\tTesting of the 7th state of a finite state machine (the 'state7' method)... ")
+
         testReadSingleToken("   ", Token(Token.Kind.SPACES, "   "))
 
         testReadMultipleTokens(" /", listOf(
@@ -165,125 +190,87 @@ internal class TestTokenizer {
             Token(Token.Kind.OP, "/"),
         ))
 
-        testReadInvalidTokens("   $", "illegal character '$'")
+        testReadInvalidTokens("   $", "Illegal character '$'")
+
+        println("OK")
     }
 
     @Test
     @DisplayName(
         """
-        Testing of the 8th state of a finite state machine (the "state8" method).
-        """
-    )
-    fun state8() {
-        testReadSingleToken(")", Token(Token.Kind.PARENTHESES, ")"))
-
-        testReadMultipleTokens("))", listOf(
-            Token(Token.Kind.PARENTHESES, ")"),
-            Token(Token.Kind.PARENTHESES, ")")
-        ))
-        testReadMultipleTokens(")+", listOf(
-            Token(Token.Kind.PARENTHESES, ")"),
-            Token(Token.Kind.OP, "+")
-        ))
-        testReadMultipleTokens("),", listOf(
-            Token(Token.Kind.PARENTHESES, ")"),
-            Token(Token.Kind.COMMA, ",")
-        ))
-
-        testReadMultipleTokens(")1", listOf(
-            Token(Token.Kind.PARENTHESES, ")"),
-            Token(Token.Kind.OP, "*"),
-            Token(Token.Kind.INT, "1")
-        ))
-        testReadMultipleTokens(")(", listOf(
-            Token(Token.Kind.PARENTHESES, ")"),
-            Token(Token.Kind.OP, "*"),
-            Token(Token.Kind.PARENTHESES, "(")
-        ))
-        testReadMultipleTokens(")e", listOf(
-            Token(Token.Kind.PARENTHESES, ")"),
-            Token(Token.Kind.OP, "*"),
-            Token(Token.Kind.IDENT, "e")
-        ))
-
-        testReadInvalidTokens(").", "illegal character '.'")
-    }
-
-
-    @Test
-    @DisplayName(
-        """
-        Testing the reading expression: "+-+1  / -2 * 3e1\n"
+        Testing the reading expression: '+-+1  / -2 * 3e1\n'
         """
     )
     fun testExpression1() {
+        print("\tTesting the reading expression: '+-+1  / -2 * 3e1\\n'... ")
         testReadMultipleTokens("+-+1  / -2 * 3e1\n", listOf(
             Token(Token.Kind.OP, "+"),
             Token(Token.Kind.OP, "-"),
             Token(Token.Kind.OP, "+"),
-            Token(Token.Kind.INT, "1"),
+            Token(Token.Kind.NUMBER, "1"),
             Token(Token.Kind.SPACES, "  "),
             Token(Token.Kind.OP, "/"),
             Token(Token.Kind.SPACES, " "),
             Token(Token.Kind.OP, "-"),
-            Token(Token.Kind.INT, "2"),
+            Token(Token.Kind.NUMBER, "2"),
             Token(Token.Kind.SPACES, " "),
             Token(Token.Kind.OP, "*"),
             Token(Token.Kind.SPACES, " "),
-            Token(Token.Kind.INT, "3"),
-            Token(Token.Kind.OP, "*"),
+            Token(Token.Kind.NUMBER, "3"),
             Token(Token.Kind.IDENT, "e1"),
             Token(Token.Kind.EOL, "\n")
         ))
+        println("OK")
     }
 
     @Test
     @DisplayName(
         """
-        Testing the reading expression: "+-+1  /exit \t -2 / 3E-a1b\n"
+        Testing the reading expression: '+-+1  /exit \t -2 / 3E-a1b(1)2\n'
         """
     )
     fun testExpression2() {
+        print("\tTesting the reading expression: '+-+1  /exit \\t -2 / 3E-a1b(1)2\\n'... ")
         testReadMultipleTokens("+-+1  /exit \t -2 / 3E-a1b(1)2\n", listOf(
             Token(Token.Kind.OP, "+"),
             Token(Token.Kind.OP, "-"),
             Token(Token.Kind.OP, "+"),
-            Token(Token.Kind.INT, "1"),
+            Token(Token.Kind.NUMBER, "1"),
             Token(Token.Kind.SPACES, "  "),
             Token(Token.Kind.COMMAND, "/exit"),
             Token(Token.Kind.SPACES, " \t "),
             Token(Token.Kind.OP, "-"),
-            Token(Token.Kind.INT, "2"),
+            Token(Token.Kind.NUMBER, "2"),
             Token(Token.Kind.SPACES, " "),
             Token(Token.Kind.OP, "/"),
             Token(Token.Kind.SPACES, " "),
-            Token(Token.Kind.INT, "3"),
-            Token(Token.Kind.OP, "*"),
+            Token(Token.Kind.NUMBER, "3"),
             Token(Token.Kind.IDENT, "E"),
             Token(Token.Kind.OP, "-"),
             Token(Token.Kind.IDENT, "a1b"),
             Token(Token.Kind.PARENTHESES, "("),
-            Token(Token.Kind.INT, "1"),
+            Token(Token.Kind.NUMBER, "1"),
             Token(Token.Kind.PARENTHESES, ")"),
-            Token(Token.Kind.OP, "*"),
-            Token(Token.Kind.INT, "2"),
+            Token(Token.Kind.NUMBER, "2"),
             Token(Token.Kind.EOL, "\n")
         ))
+        println("OK")
     }
 
     @Test
     @DisplayName(
         """
-        Testing the reading expression: "+--+1 ++++ ---3e1 +-+ 3eA"
+        Testing the reading expression: '+--+1 ++++ ---3e1 +-+ 3eA'
         """
     )
     fun testExpression3() {
+        print("\tTesting the reading expression: '+--+1 ++++ ---3e1 +-+ 3eA'... ")
         testReadMultipleTokens("+--+1 ++++ ---3e1 +-+ 3eA", listOf(
             Token(Token.Kind.OP, "+"),
             Token(Token.Kind.OP, "-"),
             Token(Token.Kind.OP, "-"),
             Token(Token.Kind.OP, "+"),
-            Token(Token.Kind.INT, "1"),
+            Token(Token.Kind.NUMBER, "1"),
             Token(Token.Kind.SPACES, " "),
             Token(Token.Kind.OP, "+"),
             Token(Token.Kind.OP, "+"),
@@ -293,30 +280,39 @@ internal class TestTokenizer {
             Token(Token.Kind.OP, "-"),
             Token(Token.Kind.OP, "-"),
             Token(Token.Kind.OP, "-"),
-            Token(Token.Kind.INT, "3"),
-            Token(Token.Kind.OP, "*"),
+            Token(Token.Kind.NUMBER, "3"),
             Token(Token.Kind.IDENT, "e1"),
             Token(Token.Kind.SPACES, " "),
             Token(Token.Kind.OP, "+"),
             Token(Token.Kind.OP, "-"),
             Token(Token.Kind.OP, "+"),
             Token(Token.Kind.SPACES, " "),
-            Token(Token.Kind.INT, "3"),
-            Token(Token.Kind.OP, "*"),
+            Token(Token.Kind.NUMBER, "3"),
             Token(Token.Kind.IDENT, "eA"),
         ))
+        println("OK")
     }
 
     @Test
     @Disabled
     @DisplayName(
         """
-        Testing the reading a long identifier.
+        Testing the reading a long identifier
         """
     )
     fun testLongIdentifier() {
+        print("\tTesting the reading a long identifier... ")
+
         val longIdentifier = "a".repeat(10000)
         testReadSingleToken(longIdentifier, Token(Token.Kind.IDENT, longIdentifier))
+
+        println("OK")
+    }
+
+    @AfterAll
+    fun finish() {
+        println("Testing methods of the Tokenizer class... OK")
+        println()
     }
 
 
@@ -336,20 +332,18 @@ internal class TestTokenizer {
         val tokenStream = Tokenizer(StringReader(inputString))
         val tokens = mutableListOf<Token>()
 
-        tokenStream.forEach { token -> tokens.add(token) }
+        tokenStream.use { it.forEach { token -> tokens.add(token) } }
 
-        tokenStream.use {
+        assertEquals(
+            expectedTokens.count(), tokens.count(),
+            "The actual count of tokens is not equal to the expected one"
+        )
+
+        expectedTokens.zip(tokens).forEach {
             assertEquals(
-                expectedTokens.count(), tokens.count(),
-                "The actual count of tokens is not equal to the expected one"
+                it.first, it.second,
+                "The actual token is not equal to the expected one"
             )
-
-            expectedTokens.zip(tokens).forEach {
-                assertEquals(
-                    it.first, it.second,
-                    "The actual token is not equal to the expected one"
-                )
-            }
         }
     }
 
