@@ -1,9 +1,7 @@
 package calculator
 
-import java.math.MathContext
-
 fun main() {
-    val calculator = Calculator(MathContext.DECIMAL128)
+    val calculator = Calculator()
 
     printWelcomeMessage()
 
@@ -12,11 +10,10 @@ fun main() {
 
         try {
             when (val result = calculator.executeStatement(input)) {
-                null -> Unit
                 is Number -> println(result)
                 is Command.HELP -> println(Command.HELP)
-                is Command.FUNCTIONS -> println(Command.FUNCTIONS)
                 is Command.EXIT -> break
+                else -> Unit
             }
         } catch (e: CalculatorException) {
             println(e.localizedMessage)

@@ -1,11 +1,10 @@
 -------------------------------------------------------------------------------------------------
 Priority of operators:                                                                          |
-1: Function call.                                                                               |
-2: Factorial operation ("!") and percent operation ("%"). Left-association.                     |
-3: Exponentiation ("^"). Right-association.                                                     |
-4: Unary plus ("+") and unary minus ("-"). Right-association.                                   |
-5: Multiplication ("*") and division ("/"). Left-association.                                   |
-6: Summation ("+") and subtraction ("-"). Left-association.                                     |
+1: Factorial operation ("!"). Left-association.                                                 |
+2: Exponentiation ("^"). Right-association.                                                     |
+3: Unary plus ("+") and unary minus ("-"). Right-association.                                   |
+4: Multiplication ("*"), division ("/") and modulo operation ("%"). Left-association.           |
+5: Summation ("+") and subtraction ("-"). Left-association.                                     |
 -------------------------------------------------------------------------------------------------
 Formal grammar:                                                                                 |
 -------------------------------------------------------------------------------------------------
@@ -22,6 +21,7 @@ ExprRest ::= "+" ExprPriority5 #BinPlusToPostfix ExprRest                       
 ExprPriority5 ::= ExprPriority4 ExprPriority5Rest                                               |
 ExprPriority5Rest ::= "*" ExprPriority4 #MulToPostfix ExprPriority5Rest                         |
                   |   "/" ExprPriority4 #DivToPostfix ExprPriority5Rest                         |
+                  |   "%" ExprPriority4 #ModToPostfix ExprPriority5Rest                         |
                   |   ExprPriority3 #MulToPostfix ExprPriority5Rest                             |
                   |   epsilon                                                                   |
 ExprPriority4 ::= "+" ExprPriority4                                                             |
@@ -32,18 +32,11 @@ ExprPriority3Rest ::= "^" ExprPriority4 #PowToPostfix ExprPriority3Rest         
                   |   epsilon                                                                   |
 ExprPriority2 ::= ExprPriority1 ExprPriority2Rest                                               |
 ExprPriority2Rest ::= "!" #FactorialToPostfix ExprPriority2Rest                                 |
-                  |   "%" #PercentToPostfix ExprPriority2Rest                                   |
                   |   epsilon                                                                   |
-ExprPriority1 ::= ident #TokenToPostfix FunctionCallOrEpsilon                                   |
+ExprPriority1 ::= ident #TokenToPostfix                                                         |
               |   number #TokenToPostfix                                                        |
               |   "(" Expr ")"                                                                  |
               |   "[" Expr "]"                                                                  |
-FunctionCallOrEpsilon ::= "(" ActualArgumentsList ")" #InvokeToPostfix                          |
-                      |   "(" ")" #InvokeToPostfix                                              |
-                      |   epsilon                                                               |
-ActualArgumentsList ::= Expr #PutArgToPostfix ActualArgumentsListRest                           |
-ActualArgumentsListRest ::= "," Expr #PutArgToPostfix ActualArgumentsListRest                   |
-                        |   epsilon                                                             |
 ------------------------------------------------------------------------------------------------|
 Parser actions:                                                                                 |
 ------------------------------------------------------------------------------------------------|
@@ -55,10 +48,8 @@ BinMinusToPostfix ::= { toPostfix(PostfixItem(PostfixItem.Kind.OP, "-")) }      
 UnMinusToPostfix ::= { toPostfix(PostfixItem(PostfixItem.Kind.OP, "u-")) }                      |
 MulToPostfix ::= { toPostfix(PostfixItem(PostfixItem.Kind.OP, "*")) }                           |
 DivToPostfix ::= { toPostfix(PostfixItem(PostfixItem.Kind.OP, "/")) }                           |
+ModToPostfix ::= { toPostfix(PostfixItem(PostfixItem.Kind.OP, "%")) }                           |
 PowToPostfix ::= { toPostfix(PostfixItem(PostfixItem.Kind.OP, "^")) }                           |
 FactorialToPostfix ::= { toPostfix(PostfixItem(PostfixItem.Kind.OP, "!")) }                     |
-PercentToPostfix ::= { toPostfix(PostfixItem(PostfixItem.Kind.OP, "%")) }                       |
-InvokeToPostifx ::= { toPostfix(PostfixItem(PostfixItem.Kind.OP, "invoke")) }                   |
-PutArgToPostfix ::= { toPostfix(PostfixItem(PostfixItem.Kind.OP, "put_arg")) }                  |
 -------------------------------------------------------------------------------------------------
 

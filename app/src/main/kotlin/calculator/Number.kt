@@ -1,117 +1,107 @@
 package calculator
 
-import ch.obermuhlner.math.big.BigDecimalMath.factorial
-import ch.obermuhlner.math.big.BigDecimalMath.pow
-import java.math.BigDecimal
-import java.math.MathContext
+import java.math.BigInteger
 
 /**
- * Wrapper class for the [BigDecimal] class.
- * Arithmetic operations on this class can lead to an overflow exception
- * (an instance of the [ArithmeticException] class).
+ * Wrapper class for the [BigInteger] class.
  */
 @Suppress("MemberVisibilityCanBePrivate")
-data class Number(val value: BigDecimal) : Calculator.Operand, CalculationResult {
+data class Number(val value: BigInteger) : Calculator.Operand, CalculationResult {
     /**
-     * Checks whether number is an integer.
+     * Converts number to a string representation.
      */
-    val isInteger: Boolean
-        get() = value.signum() == 0 || value.scale() <= 0 || value.stripTrailingZeros().scale() <= 0
+    override fun toString() = value.toString()
 
 
     /**
-     * Converts number to a string representation with a precision of 15 and
-     * the maximum number of trailing zeros is 9.
+     * Changes the sign of a number.
      */
-    override fun toString() = toString(15, 9)
+    operator fun unaryMinus() = Number(-value)
 
     /**
-     * Converts number to a string representation with an arbitrary [precision] and
-     * the maximum number of trailing zeros - [maxTrailingZeros].
+     * Adds two numbers and returns a new one.
      */
-    fun toString(precision: Int, maxTrailingZeros: Int): String {
-        val minScale = -maxTrailingZeros
-        val maxValue = BigDecimal.TEN.pow(precision)
-        val tempValue = value.round(MathContext(precision)).stripTrailingZeros()
-
-        return if (tempValue < maxValue && tempValue.scale() in minScale..0) {
-            tempValue.toPlainString()
-        } else {
-            tempValue.toString().replace("E", "*10^")
-        }
-    }
-
+    operator fun plus(other: Number) = Number(value + other.value)
 
     /**
-     * Changes the sign of a number by rounding it to the precision specified by the [mc].
+     * Subtracts two numbers and returns a new one.
      */
-    fun negate(mc: MathContext) = Number(value.negate(mc))
+    operator fun minus(other: Number) = Number(value - other.value)
 
     /**
-     * Adds two numbers and returns a new one rounded to the precision specified in the [mc].
+     * Multiplies two numbers and returns a new one.
      */
-    fun add(other: Number, mc: MathContext) = Number(value.add(other.value, mc))
+    operator fun times(other: Number) = Number(value * other.value)
 
     /**
-     * Subtracts two numbers and returns a new one rounded to the precision specified in the [mc].
-     */
-    fun subtract(other: Number, mc: MathContext) = Number(value.subtract(other.value, mc))
-
-    /**
-     * Multiplies two numbers and returns a new one rounded to the precision specified in the [mc].
-     */
-    fun multiply(other: Number, mc: MathContext) = Number(value.multiply(other.value, mc))
-
-    /**
-     * Divides two numbers and returns a new one rounded to the precision specified in the [mc].
+     * Divides two numbers and returns a new one.
      *
      * @throws ArithmeticException If division by zero occurs or division is undefined
      */
-    fun divide(other: Number, mc: MathContext) = Number(value.divide(other.value, mc))
-
-    /**
-     * Raises the given number to the power of [y], rounding it to the precision specified in the [mc].
-     *
-     * @throws ArithmeticException If the current number is less than zero and [y] is not an integer,
-     * @throws UnsupportedOperationException If the [mc] has unlimited precision.
-     * or if the current number is zero but [y] is less than zero.
-     */
-    fun pow(y: Number, mc: MathContext): Number {
-        return when {
-            value < BigDecimal.ZERO && !y.isInteger -> {
-                throw ArithmeticException(
-                    "Illegal x^y for x < 0 and non-integer y: " +
-                    "x = $this; y = $y"
-                )
+    operator fun div(other: Number) =
+        when {
+            value == BigInteger.ZERO && other.value == BigInteger.ZERO -> {
+                throw ArithmeticException("Division undefined")
             }
 
-            value.signum() == 0 && y.value < BigDecimal.ZERO -> {
-                throw ArithmeticException("Illegal x^y for x = 0 and y < 0: y = $y")
+            other.value == BigInteger.ZERO -> {
+                throw ArithmeticException("Division by zero")
             }
 
-            else -> Number(pow(value, y.value, mc))
+            else -> Number(value / other.value)
         }
-    }
 
     /**
-     * Returns the factorial of a given number, rounding it to the precision specified in the [mc].
-     * For a fractional numbers, this function applies the gamma function.
-     *
-     * @throws ArithmeticException If the current number is an integer and less than zero.
-     * @throws UnsupportedOperationException If the current number is not an integer and
-     * the [mc] has unlimited precision.
+     * Divides two numbers and returns the remainder of the division.
      */
-    fun factorial(mc: MathContext): Number {
-        if (value < BigDecimal.ZERO && isInteger) {
-            throw ArithmeticException("Illegal x! for x < 0, where x is integer: x = $this")
+    operator fun rem(other: Number) =
+        when {
+            value == BigInteger.ZERO && other.value == BigInteger.ZERO -> {
+                throw ArithmeticException("Division undefined")
+            }
+
+            other.value == BigInteger.ZERO -> {
+                throw ArithmeticException("Division by zero")
+            }
+
+            else -> Number(value % other.value)
+        }
+
+    /**
+     * Raises the given number to the power of [y].
+     *
+     * @throws ArithmeticException If the [y] value is negative or greater than [Int.MAX_VALUE].
+     */
+    infix fun pow(y: Number): Number {
+        if (y.value < BigInteger.ZERO) {
+            throw ArithmeticException("Illegal x^y for y < 0: y = $y")
         } else {
-            return Number(factorial(value, mc))
+            val intValue = try {
+                y.value.intValueExact()
+            } catch (e: ArithmeticException) {
+                throw ArithmeticException("Illegal x^y for y > ${Int.MAX_VALUE}: y = $y")
+            }
+
+            return Number(value.pow(intValue))
         }
     }
 
     /**
-     * Returns the result of a division the current number by 100,
-     * rounding it to the precision specified in the [mc].
+     * Returns the factorial of a given number.
+     *
+     * @throws ArithmeticException If the current number is less than zero.
      */
-    fun percent(mc: MathContext) = divide(Number(BigDecimal(100)), mc)
+    fun factorial() =
+        when {
+            value < BigInteger.ZERO -> throw ArithmeticException("Illegal x! for x < 0: x = $this")
+            value == BigInteger.ZERO -> Number(BigInteger.ONE)
+            else -> Number(factorial(value))
+        }
+
+
+    private tailrec fun factorial(x: BigInteger, temp: BigInteger = BigInteger.ONE): BigInteger =
+        when {
+            x <= BigInteger.ONE -> temp
+            else -> factorial(x - BigInteger.ONE, x * temp)
+        }
 }

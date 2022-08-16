@@ -28,7 +28,6 @@ internal class TestTokenizer {
         testReadSingleToken("\n", Token(Token.Kind.EOL, "\n"))
         testReadSingleToken("$CR", Token(Token.Kind.EOL, "\n"))
         testReadSingleToken("*", Token(Token.Kind.OP, "*"))
-        testReadSingleToken(",", Token(Token.Kind.COMMA, ","))
         testReadSingleToken("=", Token(Token.Kind.ASSIGN, "="))
         testReadSingleToken("(", Token(Token.Kind.PARENTHESES, "("))
 
@@ -41,7 +40,7 @@ internal class TestTokenizer {
     @DisplayName(
         """
         Testing of the 1st state of a finite state machine (the 'state1' method).
-        Testing reading integer numbers
+        Testing reading numbers
         """
     )
     fun testState1() {
@@ -62,49 +61,12 @@ internal class TestTokenizer {
     @Test
     @DisplayName(
         """
-        Testing of the 2nd state of a finite state machine (the 'state2' method)
+        Testing of the 2nd state of a finite state machine (the 'state2' method).
+        Testing reading identifiers
         """
     )
     fun testState2() {
         print("\tTesting of the 2nd state of a finite state machine (the 'state2' method)... ")
-        testReadInvalidTokens(".@", "Illegal character '.'")
-        println("OK")
-    }
-
-    @Test
-    @DisplayName(
-        """
-        Testing of the 3rd state of a finite state machine (the 'state3' method).
-        Testing reading float numbers
-        """
-    )
-    fun testState3() {
-        print("\tTesting of the 3rd state of a finite state machine (the 'state3' method)... ")
-        testReadSingleToken("1.1", Token(Token.Kind.NUMBER, "1.1"))
-
-        testReadMultipleTokens(".1+", listOf(
-            Token(Token.Kind.NUMBER, ".1"),
-            Token(Token.Kind.OP, "+")
-        ))
-        testReadMultipleTokens("1.e", listOf(
-            Token(Token.Kind.NUMBER, "1."),
-            Token(Token.Kind.IDENT, "e")
-        ))
-
-        testReadInvalidTokens("1.@", "Illegal character '@'")
-
-        println("OK")
-    }
-
-    @Test
-    @DisplayName(
-        """
-        Testing of the 4th state of a finite state machine (the 'state4' method).
-        Testing reading identifiers
-        """
-    )
-    fun testState4() {
-        print("\tTesting of the 4th state of a finite state machine (the 'state4' method)... ")
 
         testReadSingleToken("_1", Token(Token.Kind.IDENT, "_1"))
         testReadSingleToken("val", Token(Token.Kind.IDENT, "val"))
@@ -127,11 +89,11 @@ internal class TestTokenizer {
     @Test
     @DisplayName(
         """
-        Testing of the 5th state of a finite state machine (the 'state5' method)
+        Testing of the 3rd state of a finite state machine (the 'state3' method)
         """
     )
-    fun testState5() {
-        print("\tTesting of the 5th state of a finite state machine (the 'state5' method)... ")
+    fun testState3() {
+        print("\tTesting of the 3rd state of a finite state machine (the 'state3' method)... ")
 
         testReadSingleToken("/", Token(Token.Kind.OP, "/"))
 
@@ -152,12 +114,12 @@ internal class TestTokenizer {
     @Test
     @DisplayName(
         """
-        Testing of the 6th state of a finite state machine (the 'state6' method).
+        Testing of the 4th state of a finite state machine (the 'state4' method).
         Testing reading commands
         """
     )
-    fun testState6() {
-        print("\tTesting of the 6th state of a finite state machine (the 'state6' method)... ")
+    fun testState4() {
+        print("\tTesting of the 4th state of a finite state machine (the 'state4' method)... ")
 
         testReadSingleToken("/exit", Token(Token.Kind.COMMAND, "/exit"))
         testReadSingleToken("/help", Token(Token.Kind.COMMAND, "/help"))
@@ -176,12 +138,12 @@ internal class TestTokenizer {
     @Test
     @DisplayName(
         """
-        Testing of the 7th state of a finite state machine (the 'state7' method).
+        Testing of the 5th state of a finite state machine (the 'state5' method).
         Testing reading spaces
         """
     )
-    fun testState7() {
-        print("\tTesting of the 7th state of a finite state machine (the 'state7' method)... ")
+    fun testState5() {
+        print("\tTesting of the 5th state of a finite state machine (the 'state5' method)... ")
 
         testReadSingleToken("   ", Token(Token.Kind.SPACES, "   "))
 

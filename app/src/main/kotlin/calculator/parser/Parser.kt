@@ -18,16 +18,12 @@ internal class Parser {
         Expr, ExprRest, ExprPriority5, ExprPriority5Rest,
         ExprPriority4, ExprPriority3, ExprPriority3Rest,
         ExprPriority2, ExprPriority2Rest, ExprPriority1,
-        FunctionCallOrEpsilon, ActualArgumentsList,
-        ActualArgumentsListRest,
 
         // Non-terminals of actions:
         AddBinPlusToPostfixRecord, AddBinMinusToPostfixRecord,
         AddUnMinusToPostfixRecord,
-        AddMulToPostfixRecord, AddDivToPostfixRecord,
-        AddPowToPostfixRecord,
-        AddInvokeActionToPostfixRecord,
-        AddPutArgActionToPostfixRecord
+        AddMulToPostfixRecord, AddDivToPostfixRecord, AddModToPostfixRecord,
+        AddPowToPostfixRecord
     }
 
 
@@ -176,9 +172,6 @@ internal class Parser {
                 NonTerminal.ExprPriority2 -> parseExprPriority2()
                 NonTerminal.ExprPriority2Rest -> parseExprPriority2Rest()
                 NonTerminal.ExprPriority1 -> parseExprPriority1()
-                NonTerminal.FunctionCallOrEpsilon -> parseFunctionCallOrEpsilon()
-                NonTerminal.ActualArgumentsList -> parseActualArgumentsList()
-                NonTerminal.ActualArgumentsListRest -> parseActualArgumentsListRest()
 
                 // Processing of non-terminals of actions:
 
@@ -197,14 +190,11 @@ internal class Parser {
                 NonTerminal.AddDivToPostfixRecord -> postfixRecord.add(
                     PostfixItem(PostfixItem.Kind.OP, "/")
                 )
+                NonTerminal.AddModToPostfixRecord -> postfixRecord.add(
+                    PostfixItem(PostfixItem.Kind.OP, "%")
+                )
                 NonTerminal.AddPowToPostfixRecord -> postfixRecord.add(
                     PostfixItem(PostfixItem.Kind.OP, "^")
-                )
-                NonTerminal.AddInvokeActionToPostfixRecord -> postfixRecord.add(
-                    PostfixItem(PostfixItem.Kind.ACTION, "invoke")
-                )
-                NonTerminal.AddPutArgActionToPostfixRecord -> postfixRecord.add(
-                    PostfixItem(PostfixItem.Kind.ACTION, "put_arg")
                 )
 
                 // Processing of terminals (tokens):
@@ -248,16 +238,27 @@ internal class Parser {
     private fun parseExprPriority5Rest() {
         when (curToken.kind) {
             Token.Kind.OP -> {
-                if (curToken.lexem == "*") {
-                    curToken = readTokenInExpr()
-                    symbolsStack.addFirst(NonTerminal.ExprPriority5Rest)
-                    symbolsStack.addFirst(NonTerminal.AddMulToPostfixRecord)
-                    symbolsStack.addFirst(NonTerminal.ExprPriority4)
-                } else if (curToken.lexem == "/") {
-                    curToken = readTokenInExpr()
-                    symbolsStack.addFirst(NonTerminal.ExprPriority5Rest)
-                    symbolsStack.addFirst(NonTerminal.AddDivToPostfixRecord)
-                    symbolsStack.addFirst(NonTerminal.ExprPriority4)
+                when (curToken.lexem) {
+                    "*" -> {
+                        curToken = readTokenInExpr()
+                        symbolsStack.addFirst(NonTerminal.ExprPriority5Rest)
+                        symbolsStack.addFirst(NonTerminal.AddMulToPostfixRecord)
+                        symbolsStack.addFirst(NonTerminal.ExprPriority4)
+                    }
+
+                    "/" -> {
+                        curToken = readTokenInExpr()
+                        symbolsStack.addFirst(NonTerminal.ExprPriority5Rest)
+                        symbolsStack.addFirst(NonTerminal.AddDivToPostfixRecord)
+                        symbolsStack.addFirst(NonTerminal.ExprPriority4)
+                    }
+
+                    "%" -> {
+                        curToken = readTokenInExpr()
+                        symbolsStack.addFirst(NonTerminal.ExprPriority5Rest)
+                        symbolsStack.addFirst(NonTerminal.AddModToPostfixRecord)
+                        symbolsStack.addFirst(NonTerminal.ExprPriority4)
+                    }
                 }
             }
 
@@ -322,7 +323,7 @@ internal class Parser {
     }
 
     private fun parseExprPriority2Rest() {
-        while (curToken.lexem == "!" || curToken.lexem == "%") {
+        while (curToken.lexem == "!") {
             postfixRecord.add(PostfixItem(PostfixItem.Kind.OP, curToken.lexem))
             curToken = readTokenInExpr()
         }
@@ -338,7 +339,6 @@ internal class Parser {
             Token.Kind.IDENT -> {
                 postfixRecord.add(PostfixItem(PostfixItem.Kind.IDENT, curToken.lexem))
                 curToken = readTokenInExpr()
-                parseFunctionCallOrEpsilon()
             }
 
             Token.Kind.PARENTHESES -> {
@@ -360,36 +360,6 @@ internal class Parser {
             }
 
             else -> errorReport("expression", curToken)
-        }
-    }
-
-    private fun parseFunctionCallOrEpsilon() {
-        if (curToken.lexem == "(") {
-            curToken = readTokenInExpr()
-
-            if (curToken.lexem == ")") {
-                curToken = readTokenInExpr()
-                postfixRecord.add(PostfixItem(PostfixItem.Kind.ACTION, "invoke"))
-            } else {
-                symbolsStack.addFirst(NonTerminal.AddInvokeActionToPostfixRecord)
-                symbolsStack.addFirst(Token(Token.Kind.PARENTHESES, ")"))
-                symbolsStack.addFirst(NonTerminal.ActualArgumentsList)
-            }
-        }
-    }
-
-    private fun parseActualArgumentsList() {
-        symbolsStack.addFirst(NonTerminal.ActualArgumentsListRest)
-        symbolsStack.addFirst(NonTerminal.AddPutArgActionToPostfixRecord)
-        symbolsStack.addFirst(NonTerminal.Expr)
-    }
-
-    private fun parseActualArgumentsListRest() {
-        if (curToken.kind == Token.Kind.COMMA) {
-            curToken = readTokenInExpr()
-            symbolsStack.addFirst(NonTerminal.ActualArgumentsListRest)
-            symbolsStack.addFirst(NonTerminal.AddPutArgActionToPostfixRecord)
-            symbolsStack.addFirst(NonTerminal.Expr)
         }
     }
 }

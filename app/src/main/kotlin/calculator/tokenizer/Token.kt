@@ -11,7 +11,7 @@ import calculator.GrammarSymbol
 internal data class Token(val kind: Kind, val lexem: String) : GrammarSymbol {
     enum class Kind {
         EOF, EOL, NUMBER, IDENT, OP,
-        COMMA, ASSIGN, SPACES, PARENTHESES,
+        ASSIGN, SPACES, PARENTHESES,
         COMMAND
     }
 }
