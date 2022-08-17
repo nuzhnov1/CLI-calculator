@@ -1,4 +1,4 @@
-package calculator.parser
+package calculator
 
 /**
  * A structure containing the postfix token type and the string representation of this token.

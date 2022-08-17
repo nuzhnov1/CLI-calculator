@@ -1,4 +1,4 @@
-package calculator.tokenizer
+package calculator
 
 internal const val EOF      = '\u0000'  // End of file
 internal const val TAB      = '\t'      // Horizontal tabulation

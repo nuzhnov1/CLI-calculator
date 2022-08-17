@@ -1,8 +1,5 @@
 package calculator
 
-import calculator.tokenizer.CR
-import calculator.tokenizer.Token
-import calculator.tokenizer.Tokenizer
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.assertEquals
 import java.io.StringReader
@@ -53,6 +50,7 @@ internal class TestTokenizer {
             Token(Token.Kind.EOL, "\n")
         ))
 
+        testReadInvalidTokens("123a", "Invalid number")
         testReadInvalidTokens("123@", "Illegal character '@'")
 
         println("OK")
@@ -68,20 +66,19 @@ internal class TestTokenizer {
     fun testState2() {
         print("\tTesting of the 2nd state of a finite state machine (the 'state2' method)... ")
 
-        testReadSingleToken("_1", Token(Token.Kind.IDENT, "_1"))
         testReadSingleToken("val", Token(Token.Kind.IDENT, "val"))
-        testReadSingleToken("e1", Token(Token.Kind.IDENT, "e1"))
 
-        testReadMultipleTokens("abe1+", listOf(
-            Token(Token.Kind.IDENT, "abe1"),
+        testReadMultipleTokens("abe+", listOf(
+            Token(Token.Kind.IDENT, "abe"),
             Token(Token.Kind.OP, "+")
         ))
-        testReadMultipleTokens("a1 \t\t\t \t\t \t", listOf(
-            Token(Token.Kind.IDENT, "a1"),
+        testReadMultipleTokens("a \t\t\t \t\t \t", listOf(
+            Token(Token.Kind.IDENT, "a"),
             Token(Token.Kind.SPACES, " \t\t\t \t\t \t"),
         ))
 
-        testReadInvalidTokens("e1.", "Illegal character '.'")
+        testReadInvalidTokens("e1", "Invalid identifier")
+        testReadInvalidTokens("e.", "Illegal character '.'")
 
         println("OK")
     }
@@ -123,11 +120,14 @@ internal class TestTokenizer {
 
         testReadSingleToken("/exit", Token(Token.Kind.COMMAND, "/exit"))
         testReadSingleToken("/help", Token(Token.Kind.COMMAND, "/help"))
-        testReadSingleToken("/help1", Token(Token.Kind.COMMAND, "/help1"))
 
-        testReadMultipleTokens("/exit+", listOf(
+        testReadMultipleTokens("/exit$CR", listOf(
             Token(Token.Kind.COMMAND, "/exit"),
-            Token(Token.Kind.OP, "+"),
+            Token(Token.Kind.EOL, "\n"),
+        ))
+        testReadMultipleTokens("/exit ", listOf(
+            Token(Token.Kind.COMMAND, "/exit"),
+            Token(Token.Kind.SPACES, " ")
         ))
 
         testReadInvalidTokens("/exit#", "Illegal character '#'")
@@ -160,12 +160,12 @@ internal class TestTokenizer {
     @Test
     @DisplayName(
         """
-        Testing the reading expression: '+-+1  / -2 * 3e1\n'
+        Testing the reading expression: '+-+1  / -2 * 3\n'
         """
     )
     fun testExpression1() {
-        print("\tTesting the reading expression: '+-+1  / -2 * 3e1\\n'... ")
-        testReadMultipleTokens("+-+1  / -2 * 3e1\n", listOf(
+        print("\tTesting the reading expression: '+-+1  / -2 * 3\\n'... ")
+        testReadMultipleTokens("+-+1  / -2 * 3\n", listOf(
             Token(Token.Kind.OP, "+"),
             Token(Token.Kind.OP, "-"),
             Token(Token.Kind.OP, "+"),
@@ -179,7 +179,6 @@ internal class TestTokenizer {
             Token(Token.Kind.OP, "*"),
             Token(Token.Kind.SPACES, " "),
             Token(Token.Kind.NUMBER, "3"),
-            Token(Token.Kind.IDENT, "e1"),
             Token(Token.Kind.EOL, "\n")
         ))
         println("OK")
@@ -188,12 +187,12 @@ internal class TestTokenizer {
     @Test
     @DisplayName(
         """
-        Testing the reading expression: '+-+1  /exit \t -2 / 3E-a1b(1)2\n'
+        Testing the reading expression: '+-+1  /exit \t -2 % 3-ab\n'
         """
     )
     fun testExpression2() {
-        print("\tTesting the reading expression: '+-+1  /exit \\t -2 / 3E-a1b(1)2\\n'... ")
-        testReadMultipleTokens("+-+1  /exit \t -2 / 3E-a1b(1)2\n", listOf(
+        print("\tTesting the reading expression: '+-+1  /exit \\t -2 % 3-ab\\n'... ")
+        testReadMultipleTokens("+-+1  /exit \t -2 % 3-ab\n", listOf(
             Token(Token.Kind.OP, "+"),
             Token(Token.Kind.OP, "-"),
             Token(Token.Kind.OP, "+"),
@@ -204,16 +203,11 @@ internal class TestTokenizer {
             Token(Token.Kind.OP, "-"),
             Token(Token.Kind.NUMBER, "2"),
             Token(Token.Kind.SPACES, " "),
-            Token(Token.Kind.OP, "/"),
+            Token(Token.Kind.OP, "%"),
             Token(Token.Kind.SPACES, " "),
             Token(Token.Kind.NUMBER, "3"),
-            Token(Token.Kind.IDENT, "E"),
             Token(Token.Kind.OP, "-"),
-            Token(Token.Kind.IDENT, "a1b"),
-            Token(Token.Kind.PARENTHESES, "("),
-            Token(Token.Kind.NUMBER, "1"),
-            Token(Token.Kind.PARENTHESES, ")"),
-            Token(Token.Kind.NUMBER, "2"),
+            Token(Token.Kind.IDENT, "ab"),
             Token(Token.Kind.EOL, "\n")
         ))
         println("OK")
@@ -222,12 +216,12 @@ internal class TestTokenizer {
     @Test
     @DisplayName(
         """
-        Testing the reading expression: '+--+1 ++++ ---3e1 +-+ 3eA'
+        Testing the reading expression: '+--+1 ++++ ---31 +-+ eA'
         """
     )
     fun testExpression3() {
-        print("\tTesting the reading expression: '+--+1 ++++ ---3e1 +-+ 3eA'... ")
-        testReadMultipleTokens("+--+1 ++++ ---3e1 +-+ 3eA", listOf(
+        print("\tTesting the reading expression: '+--+1 ++++ ---31 +-+ eA'... ")
+        testReadMultipleTokens("+--+1 ++++ ---31 +-+ eA", listOf(
             Token(Token.Kind.OP, "+"),
             Token(Token.Kind.OP, "-"),
             Token(Token.Kind.OP, "-"),
@@ -242,15 +236,13 @@ internal class TestTokenizer {
             Token(Token.Kind.OP, "-"),
             Token(Token.Kind.OP, "-"),
             Token(Token.Kind.OP, "-"),
-            Token(Token.Kind.NUMBER, "3"),
-            Token(Token.Kind.IDENT, "e1"),
+            Token(Token.Kind.NUMBER, "31"),
             Token(Token.Kind.SPACES, " "),
             Token(Token.Kind.OP, "+"),
             Token(Token.Kind.OP, "-"),
             Token(Token.Kind.OP, "+"),
             Token(Token.Kind.SPACES, " "),
-            Token(Token.Kind.NUMBER, "3"),
-            Token(Token.Kind.IDENT, "eA"),
+            Token(Token.Kind.IDENT, "eA")
         ))
         println("OK")
     }

@@ -1,9 +1,5 @@
 package calculator
 
-import calculator.parser.Parser
-import calculator.parser.PostfixItem
-import calculator.tokenizer.CR
-import calculator.tokenizer.LF
 import java.io.Reader
 import java.io.StringReader
 import java.math.BigInteger
@@ -79,10 +75,10 @@ class Calculator {
         } catch (e: ArithmeticException) {
             val message = e.localizedMessage
 
-            throw if ("overflow" in message.lowercase()) {
-                ExecutionException("Overflow", e)
+            if ("overflow" in message.lowercase()) {
+                throw ExecutionException("Overflow", e)
             } else {
-                ExecutionException(e.localizedMessage, e)
+                throw ExecutionException(e.localizedMessage, e)
             }
         } finally {
             // Reset calculator state:
@@ -94,7 +90,7 @@ class Calculator {
     private fun makeNumber(representation: String) = Number(BigInteger(representation))
 
     private fun derefIdent(name: String) =
-        declaredVariables[name] ?: throw ExecutionException("Undeclared variable '$name'")
+        declaredVariables[name] ?: throw ExecutionException("Unknown variable")
 
     private fun ArrayDeque<Operand>.popNumberOrNull() =
         when (val operand = removeFirstOrNull()) {
@@ -173,6 +169,6 @@ class Calculator {
         when (commandName) {
             "help" -> Command.HELP
             "exit" -> Command.EXIT
-            else -> throw ExecutionException("Unknown command '$commandName'")
+            else -> throw ExecutionException("Unknown command")
         }
 }

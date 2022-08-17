@@ -1,6 +1,5 @@
-package calculator.tokenizer
+package calculator
 
-import calculator.SyntaxException
 import java.io.Closeable
 import java.io.Reader
 
@@ -31,12 +30,12 @@ internal class Tokenizer(reader: Reader) : Iterator<Token>, Closeable {
             EOF -> Token(Token.Kind.EOF, "")
             LF -> Token(Token.Kind.EOL, "\n")
             in '0'..'9' -> state1(char.toStringBuilder())
-            '_', in 'a'..'z', in 'A'..'Z' -> state2(char.toStringBuilder())
-            '+', '-', '*', '^', '!', '%' -> Token(Token.Kind.OP, char.toString())
+            in 'a'..'z', in 'A'..'Z' -> state2(char.toStringBuilder())
+            '+', '-', '*', '%', '^', '!' -> Token(Token.Kind.OP, char.toString())
             '/' -> state3(char.toStringBuilder())
             '=' -> Token(Token.Kind.ASSIGN, "=")
             TAB, VT, FF, SPACE -> state5(char.toStringBuilder())
-            '(', ')', '[', ']' -> Token(Token.Kind.PARENTHESES, char.toString())
+            '(', ')' -> Token(Token.Kind.PARENTHESES, char.toString())
             else -> throw SyntaxException("Illegal character '$char'")
         }
     }
@@ -70,10 +69,10 @@ internal class Tokenizer(reader: Reader) : Iterator<Token>, Closeable {
         when (val char = charStream.read()) {
             EOF -> Token(Token.Kind.NUMBER, curLexem.toString())
             in '0'..'9' -> state1(curLexem.append(char))
+            in 'a'..'z', in 'A'..'Z' -> throw SyntaxException("Invalid number")
 
-            LF, '_', in 'a'..'z', in 'A'..'Z',
-            '+', '-', '*', '^', '!', '%', '/', '=',
-            TAB, VT, FF, SPACE, '(', ')', '[', ']' -> {
+            LF, '+', '-', '*', '%', '^', '!', '/', '=',
+            TAB, VT, FF, SPACE, '(', ')' -> {
                 charStream.unread(char)
                 Token(Token.Kind.NUMBER, curLexem.toString())
             }
@@ -84,13 +83,11 @@ internal class Tokenizer(reader: Reader) : Iterator<Token>, Closeable {
     private tailrec fun state2(curLexem: StringBuilder): Token =
         when (val char = charStream.read()) {
             EOF -> Token(Token.Kind.IDENT, curLexem.toString())
+            in '0'..'9' -> throw SyntaxException("Invalid identifier")
+            in 'a'..'z', in 'A'..'Z' -> state2(curLexem.append(char))
 
-            in '0'..'9', '_', in 'a'..'z',
-            in 'A'..'Z' -> state2(curLexem.append(char))
-
-            LF, '+', '-', '*', '^', '!', '%',
-            '/', '=', TAB, VT, FF, SPACE, '(', ')',
-            '[', ']' -> {
+            LF, '+', '-', '*', '%', '^', '!',
+            '/', '=', TAB, VT, FF, SPACE, '(', ')' -> {
                 charStream.unread(char)
                 Token(Token.Kind.IDENT, curLexem.toString())
             }
@@ -101,10 +98,10 @@ internal class Tokenizer(reader: Reader) : Iterator<Token>, Closeable {
     private fun state3(curLexem: StringBuilder): Token =
         when (val char = charStream.read()) {
             EOF -> Token(Token.Kind.OP, "/")
-            '_', in 'a'..'z', in 'A'..'Z' -> state4(curLexem.append(char))
+            in 'a'..'z', in 'A'..'Z' -> state4(curLexem.append(char))
 
-            LF, in '0'..'9', '+', '-', '*', '^', '!', '%',
-            '/', '=', TAB, VT, FF, SPACE, '(', ')', '[', ']' -> {
+            LF, in '0'..'9', '+', '-', '*', '%', '^', '!',
+            '/', '=', TAB, VT, FF, SPACE, '(', ')' -> {
                 charStream.unread(char)
                 Token(Token.Kind.OP, "/")
             }
@@ -115,13 +112,10 @@ internal class Tokenizer(reader: Reader) : Iterator<Token>, Closeable {
     private tailrec fun state4(curLexem: StringBuilder): Token =
         when (val char = charStream.read()) {
             EOF -> Token(Token.Kind.COMMAND, curLexem.toString())
+            in 'a'..'z', in 'A'..'Z' -> state4(curLexem.append(char))
 
-            in '0'..'9', '_', in 'a'..'z',
-            in 'A'..'Z' -> state4(curLexem.append(char))
-
-            LF, '+', '-', '*', '^', '!', '%',
-            '/', '=', TAB, VT, FF, SPACE, '(', ')',
-            '[', ']' -> {
+            LF, in '0'..'9', '+', '-', '*', '%', '^', '!',
+            '/', '=', TAB, VT, FF, SPACE, '(', ')' -> {
                 charStream.unread(char)
                 Token(Token.Kind.COMMAND, curLexem.toString())
             }
@@ -134,8 +128,8 @@ internal class Tokenizer(reader: Reader) : Iterator<Token>, Closeable {
             EOF -> Token(Token.Kind.SPACES, curLexem.toString())
             TAB, VT, FF, SPACE -> state5(curLexem.append(char))
 
-            LF, in '0'..'9', '_', in 'a'..'z', in 'A'..'Z',
-            '+', '-', '*', '^', '!', '%', '/', '=', '(', ')', '[', ']' -> {
+            LF, in '0'..'9', in 'a'..'z', in 'A'..'Z',
+            '+', '-', '*', '%', '^', '!', '/', '=', '(', ')' -> {
                 charStream.unread(char)
                 Token(Token.Kind.SPACES, curLexem.toString())
             }

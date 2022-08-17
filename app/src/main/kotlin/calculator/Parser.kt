@@ -1,9 +1,5 @@
-package calculator.parser
+package calculator
 
-import calculator.GrammarSymbol
-import calculator.SyntaxException
-import calculator.tokenizer.Token
-import calculator.tokenizer.Tokenizer
 import java.io.Reader
 
 /**
@@ -95,53 +91,77 @@ internal class Parser {
             Token.Kind.EOL -> return
 
             Token.Kind.NUMBER -> {
-                parseExpr()
-                parseEndLine()
+                try {
+                    parseExpr()
+                    parseEndLine()
+                } catch (e: SyntaxException) {
+                    throw SyntaxException("Invalid expression", e)
+                }
             }
 
             Token.Kind.IDENT -> {
                 val nextToken = readToken()
 
                 if (nextToken.kind == Token.Kind.ASSIGN) {
-                    postfixRecord.add(PostfixItem(PostfixItem.Kind.IDENT, curToken.lexem))
-                    curToken = readTokenInExpr()
-                    parseExpr()
-                    postfixRecord.add(PostfixItem(PostfixItem.Kind.ASSIGN, "="))
-                    parseEndLine()
+                    try {
+                        postfixRecord.add(PostfixItem(PostfixItem.Kind.IDENT, curToken.lexem))
+                        curToken = readTokenInExpr()
+                        parseExpr()
+                        postfixRecord.add(PostfixItem(PostfixItem.Kind.ASSIGN, "="))
+                        parseEndLine()
+                    } catch (e: SyntaxException) {
+                        throw SyntaxException("Invalid assigment", e)
+                    }
                 } else {
-                    tokenizer.pushback(nextToken)
-                    parseExpr()
-                    parseEndLine()
+                    try {
+                        tokenizer.pushback(nextToken)
+                        parseExpr()
+                        parseEndLine()
+                    } catch (e: SyntaxException) {
+                        throw SyntaxException("Invalid expression", e)
+                    }
                 }
             }
 
             Token.Kind.OP -> {
                 if (curToken.lexem == "+" || curToken.lexem == "-") {
-                    parseExpr()
-                    parseEndLine()
+                    try {
+                        parseExpr()
+                        parseEndLine()
+                    } catch (e: SyntaxException) {
+                        throw SyntaxException("Invalid expression", e)
+                    }
                 } else {
-                    errorReport("expression or command", curToken)
+                    throw SyntaxException("Invalid expression")
                 }
             }
 
             Token.Kind.PARENTHESES -> {
-                if (curToken.lexem == "(" || curToken.lexem == "[") {
-                    parseExpr()
-                    parseEndLine()
+                if (curToken.lexem == "(") {
+                    try {
+                        parseExpr()
+                        parseEndLine()
+                    } catch (e: SyntaxException) {
+                        throw SyntaxException("Invalid expression", e)
+                    }
                 } else {
-                    errorReport("expression or command", curToken)
+                    throw SyntaxException("Invalid expression")
                 }
             }
 
             Token.Kind.COMMAND -> {
-                val commandName = curToken.lexem.substring(1)
+                try {
+                    val commandName = curToken.lexem.substring(1)
 
-                postfixRecord.add(PostfixItem(PostfixItem.Kind.COMMAND, commandName))
-                curToken = readToken()
-                parseEndLine()
+                    postfixRecord.add(PostfixItem(PostfixItem.Kind.COMMAND, commandName))
+                    curToken = readToken()
+                    parseEndLine()
+                } catch (e: SyntaxException) {
+                    throw SyntaxException("Invalid command", e)
+                }
             }
 
-            else -> errorReport("expression or command", curToken)
+            else -> throw SyntaxException("Invalid expression")
         }
     }
 
@@ -236,53 +256,29 @@ internal class Parser {
     }
 
     private fun parseExprPriority5Rest() {
-        when (curToken.kind) {
-            Token.Kind.OP -> {
-                when (curToken.lexem) {
-                    "*" -> {
-                        curToken = readTokenInExpr()
-                        symbolsStack.addFirst(NonTerminal.ExprPriority5Rest)
-                        symbolsStack.addFirst(NonTerminal.AddMulToPostfixRecord)
-                        symbolsStack.addFirst(NonTerminal.ExprPriority4)
-                    }
-
-                    "/" -> {
-                        curToken = readTokenInExpr()
-                        symbolsStack.addFirst(NonTerminal.ExprPriority5Rest)
-                        symbolsStack.addFirst(NonTerminal.AddDivToPostfixRecord)
-                        symbolsStack.addFirst(NonTerminal.ExprPriority4)
-                    }
-
-                    "%" -> {
-                        curToken = readTokenInExpr()
-                        symbolsStack.addFirst(NonTerminal.ExprPriority5Rest)
-                        symbolsStack.addFirst(NonTerminal.AddModToPostfixRecord)
-                        symbolsStack.addFirst(NonTerminal.ExprPriority4)
-                    }
-                }
-            }
-
-            Token.Kind.NUMBER -> {
-                symbolsStack.addFirst(NonTerminal.ExprPriority5Rest)
-                symbolsStack.addFirst(NonTerminal.AddMulToPostfixRecord)
-                symbolsStack.addFirst(NonTerminal.ExprPriority3)
-            }
-
-            Token.Kind.IDENT -> {
-                symbolsStack.addFirst(NonTerminal.ExprPriority5Rest)
-                symbolsStack.addFirst(NonTerminal.AddMulToPostfixRecord)
-                symbolsStack.addFirst(NonTerminal.ExprPriority3)
-            }
-
-            Token.Kind.PARENTHESES -> {
-                if (curToken.lexem == "(" || curToken.lexem == "[") {
+        if (curToken.kind == Token.Kind.OP) {
+            when (curToken.lexem) {
+                "*" -> {
+                    curToken = readTokenInExpr()
                     symbolsStack.addFirst(NonTerminal.ExprPriority5Rest)
                     symbolsStack.addFirst(NonTerminal.AddMulToPostfixRecord)
-                    symbolsStack.addFirst(NonTerminal.ExprPriority3)
+                    symbolsStack.addFirst(NonTerminal.ExprPriority4)
+                }
+
+                "/" -> {
+                    curToken = readTokenInExpr()
+                    symbolsStack.addFirst(NonTerminal.ExprPriority5Rest)
+                    symbolsStack.addFirst(NonTerminal.AddDivToPostfixRecord)
+                    symbolsStack.addFirst(NonTerminal.ExprPriority4)
+                }
+
+                "%" -> {
+                    curToken = readTokenInExpr()
+                    symbolsStack.addFirst(NonTerminal.ExprPriority5Rest)
+                    symbolsStack.addFirst(NonTerminal.AddModToPostfixRecord)
+                    symbolsStack.addFirst(NonTerminal.ExprPriority4)
                 }
             }
-
-            else -> return
         }
     }
 
@@ -342,20 +338,12 @@ internal class Parser {
             }
 
             Token.Kind.PARENTHESES -> {
-                when (curToken.lexem) {
-                    "(" -> {
-                        curToken = readTokenInExpr()
-                        symbolsStack.addFirst(Token(Token.Kind.PARENTHESES, ")"))
-                        symbolsStack.addFirst(NonTerminal.Expr)
-                    }
-
-                    "[" -> {
-                        curToken = readTokenInExpr()
-                        symbolsStack.addFirst(Token(Token.Kind.PARENTHESES, "]"))
-                        symbolsStack.addFirst(NonTerminal.Expr)
-                    }
-
-                    else -> errorReport("expression", curToken)
+                if (curToken.lexem == "(") {
+                    curToken = readTokenInExpr()
+                    symbolsStack.addFirst(Token(Token.Kind.PARENTHESES, ")"))
+                    symbolsStack.addFirst(NonTerminal.Expr)
+                } else {
+                    errorReport("expression", curToken)
                 }
             }
 

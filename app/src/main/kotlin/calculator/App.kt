@@ -6,7 +6,7 @@ fun main() {
     printWelcomeMessage()
 
     while (true) {
-        val input = print(">> ").run { readLine() }
+        val input = print("> ").run { readLine() }
 
         try {
             when (val result = calculator.executeStatement(input)) {
@@ -19,6 +19,8 @@ fun main() {
             println(e.localizedMessage)
         }
     }
+
+    println("Bye!")
 }
 
 

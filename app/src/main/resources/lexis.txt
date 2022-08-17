@@ -4,11 +4,11 @@ Name of token  | Regular expression     | Description                           
 EOF            |                        | End of file                                  | 0       |
 EOL            | \n                     | End of line                                  | 1       |
 number:        | \d+                    | Numbers                                      | 2       |
-ident:         | [_a-zA-Z]\w*           | Identifiers, e.g. variable or function names | 3       |
+ident:         | [a-zA-Z]+              | Identifiers, e.g. variable or function names | 3       |
 op:            | [\-\+\*\/\^\!\%]       | Operation signs                              | 4       |
 assign:        | =                      | Assign operation                             | 5       |
 spaces:        | [ \f\r\t\v]+           | Space characters                             | 6       |
-parentheses:   | [\(\)\[\]\|]           | Parentheses                                  | 7       |
-command:       | \/[_a-zA-Z]\w*         | Commands                                     | 8       |
+parentheses:   | [\(\)]                 | Parentheses                                  | 7       |
+command:       | \/[a-zA-Z]+            | Commands                                     | 8       |
 --------------------------------------------------------------------------------------------------
 

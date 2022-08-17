@@ -1,4 +1,4 @@
-package calculator.tokenizer
+package calculator
 
 import java.io.Closeable
 import java.io.LineNumberReader

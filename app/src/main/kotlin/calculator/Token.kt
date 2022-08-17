@@ -1,6 +1,4 @@
-package calculator.tokenizer
-
-import calculator.GrammarSymbol
+package calculator
 
 /**
  * A structure containing the token type and the string representation of the token.

@@ -22,7 +22,6 @@ ExprPriority5 ::= ExprPriority4 ExprPriority5Rest                               
 ExprPriority5Rest ::= "*" ExprPriority4 #MulToPostfix ExprPriority5Rest                         |
                   |   "/" ExprPriority4 #DivToPostfix ExprPriority5Rest                         |
                   |   "%" ExprPriority4 #ModToPostfix ExprPriority5Rest                         |
-                  |   ExprPriority3 #MulToPostfix ExprPriority5Rest                             |
                   |   epsilon                                                                   |
 ExprPriority4 ::= "+" ExprPriority4                                                             |
               |   "-" ExprPriority4 #UnMinusToPostfix                                           |
@@ -36,7 +35,6 @@ ExprPriority2Rest ::= "!" #FactorialToPostfix ExprPriority2Rest                 
 ExprPriority1 ::= ident #TokenToPostfix                                                         |
               |   number #TokenToPostfix                                                        |
               |   "(" Expr ")"                                                                  |
-              |   "[" Expr "]"                                                                  |
 ------------------------------------------------------------------------------------------------|
 Parser actions:                                                                                 |
 ------------------------------------------------------------------------------------------------|
