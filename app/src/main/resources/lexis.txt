@@ -9,7 +9,7 @@ op:            | [\-\+\*\/\^\!\%]       | Operation signs                       
 comma:         | \,                     | Comma                                        | 5       |
 assign:        | =                      | Assign operation                             | 6       |
 spaces:        | [ \f\r\t\v]+           | Space characters                             | 7       |
-parentheses:   | [\(\)\[\]\|]           | Parentheses                                  | 8       |
+parentheses:   | [\(\)\[\]]             | Parentheses                                  | 8       |
 command:       | \/[_a-zA-Z]\w*         | Commands                                     | 9       |
 --------------------------------------------------------------------------------------------------
 

@@ -261,13 +261,7 @@ internal class Parser {
                 }
             }
 
-            Token.Kind.NUMBER -> {
-                symbolsStack.addFirst(NonTerminal.ExprPriority5Rest)
-                symbolsStack.addFirst(NonTerminal.AddMulToPostfixRecord)
-                symbolsStack.addFirst(NonTerminal.ExprPriority3)
-            }
-
-            Token.Kind.IDENT -> {
+            Token.Kind.NUMBER, Token.Kind.IDENT -> {
                 symbolsStack.addFirst(NonTerminal.ExprPriority5Rest)
                 symbolsStack.addFirst(NonTerminal.AddMulToPostfixRecord)
                 symbolsStack.addFirst(NonTerminal.ExprPriority3)

@@ -8,7 +8,7 @@ fun main() {
     printWelcomeMessage()
 
     while (true) {
-        val input = print(">> ").run { readLine() }
+        val input = print("> ").run { readLine() }
 
         try {
             when (val result = calculator.executeStatement(input)) {
@@ -19,7 +19,7 @@ fun main() {
                 is Command.EXIT -> break
             }
         } catch (e: CalculatorException) {
-            println(e.localizedMessage)
+            println("Error: ${e.localizedMessage.replaceFirstChar { it.lowercaseChar() }}")
         }
     }
 }
