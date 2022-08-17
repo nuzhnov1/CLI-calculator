@@ -36,7 +36,7 @@ internal class Tokenizer(reader: Reader) : Iterator<Token>, Closeable {
             '=' -> Token(Token.Kind.ASSIGN, "=")
             TAB, VT, FF, SPACE -> state5(char.toStringBuilder())
             '(', ')' -> Token(Token.Kind.PARENTHESES, char.toString())
-            else -> throw SyntaxException("Illegal character '$char'")
+            else -> throw SyntaxException("Invalid identifier")
         }
     }
 
@@ -77,7 +77,7 @@ internal class Tokenizer(reader: Reader) : Iterator<Token>, Closeable {
                 Token(Token.Kind.NUMBER, curLexem.toString())
             }
 
-            else -> throw SyntaxException("Illegal character '$char'")
+            else -> throw SyntaxException("Invalid identifier")
         }
 
     private tailrec fun state2(curLexem: StringBuilder): Token =
@@ -92,7 +92,7 @@ internal class Tokenizer(reader: Reader) : Iterator<Token>, Closeable {
                 Token(Token.Kind.IDENT, curLexem.toString())
             }
 
-            else -> throw SyntaxException("Illegal character '$char'")
+            else -> throw SyntaxException("Invalid identifier")
         }
 
     private fun state3(curLexem: StringBuilder): Token =
@@ -106,7 +106,7 @@ internal class Tokenizer(reader: Reader) : Iterator<Token>, Closeable {
                 Token(Token.Kind.OP, "/")
             }
 
-            else -> throw SyntaxException("Illegal character '$char'")
+            else -> throw SyntaxException("Invalid identifier")
         }
 
     private tailrec fun state4(curLexem: StringBuilder): Token =
@@ -120,7 +120,7 @@ internal class Tokenizer(reader: Reader) : Iterator<Token>, Closeable {
                 Token(Token.Kind.COMMAND, curLexem.toString())
             }
 
-            else -> throw SyntaxException("Illegal character '$char'")
+            else -> throw SyntaxException("Invalid identifier")
         }
 
     private tailrec fun state5(curLexem: StringBuilder): Token =
@@ -134,7 +134,7 @@ internal class Tokenizer(reader: Reader) : Iterator<Token>, Closeable {
                 Token(Token.Kind.SPACES, curLexem.toString())
             }
 
-            else -> throw SyntaxException("Illegal character '$char'")
+            else -> throw SyntaxException("Invalid identifier")
         }
 
     private fun Char.toStringBuilder() = StringBuilder(toString())

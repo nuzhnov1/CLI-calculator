@@ -6,7 +6,7 @@ fun main() {
     printWelcomeMessage()
 
     while (true) {
-        val input = print("> ").run { readLine() }
+        val input = readLine()
 
         try {
             when (val result = calculator.executeStatement(input)) {
