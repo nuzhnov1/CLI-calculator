@@ -26,6 +26,7 @@ sealed interface Command : CalculationResult {
             |   <identifier> = <expression>
             |Identifiers are case-sensitive. The constants pi and e (Euler number) are defined by default.
             |Reassign of these constants is forbidden.
+            |To exit the program, run the /exit command or press CTRL-D keystroke.
             """.trimMargin().trimIndent()
     }
 
