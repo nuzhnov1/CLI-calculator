@@ -27,4 +27,5 @@ fun main() {
 private fun printWelcomeMessage() {
     println("The command line calculator.")
     println("To get acquainted with the program - execute the command: /help")
+    println("To exit the program, run the /exit command or press CTRL-D keystroke.")
 }

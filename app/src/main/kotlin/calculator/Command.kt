@@ -20,6 +20,7 @@ sealed interface Command : CalculationResult {
             |You can declare variables using the following syntax:
             |   <identifier> = <expression>
             |Identifiers are case-sensitive.
+            |To exit the program, run the /exit command or press CTRL-D keystroke.
             """.trimMargin().trimIndent()
     }
 

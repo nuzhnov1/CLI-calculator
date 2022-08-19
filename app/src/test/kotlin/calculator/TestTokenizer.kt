@@ -28,7 +28,7 @@ internal class TestTokenizer {
         testReadSingleToken("=", Token(Token.Kind.ASSIGN, "="))
         testReadSingleToken("(", Token(Token.Kind.PARENTHESES, "("))
 
-        testReadInvalidTokens("\n\n@", "Illegal character '@'")
+        testReadInvalidTokens("\n\n@", "Invalid identifier")
 
         println("OK")
     }
@@ -51,7 +51,7 @@ internal class TestTokenizer {
         ))
 
         testReadInvalidTokens("123a", "Invalid number")
-        testReadInvalidTokens("123@", "Illegal character '@'")
+        testReadInvalidTokens("123@", "Invalid identifier")
 
         println("OK")
     }
@@ -78,7 +78,7 @@ internal class TestTokenizer {
         ))
 
         testReadInvalidTokens("e1", "Invalid identifier")
-        testReadInvalidTokens("e.", "Illegal character '.'")
+        testReadInvalidTokens("e.", "Invalid identifier")
 
         println("OK")
     }
@@ -103,7 +103,7 @@ internal class TestTokenizer {
             Token(Token.Kind.SPACES, " \t"),
         ))
 
-        testReadInvalidTokens("/.", "Illegal character '.'")
+        testReadInvalidTokens("/.", "Invalid identifier")
 
         println("OK")
     }
@@ -130,7 +130,7 @@ internal class TestTokenizer {
             Token(Token.Kind.SPACES, " ")
         ))
 
-        testReadInvalidTokens("/exit#", "Illegal character '#'")
+        testReadInvalidTokens("/exit#", "Invalid identifier")
 
         println("OK")
     }
@@ -152,7 +152,7 @@ internal class TestTokenizer {
             Token(Token.Kind.OP, "/"),
         ))
 
-        testReadInvalidTokens("   $", "Illegal character '$'")
+        testReadInvalidTokens("   $", "Invalid identifier")
 
         println("OK")
     }
